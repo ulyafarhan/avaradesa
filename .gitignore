@@ -1,0 +1,50 @@
+# Laravel
+.env
+/vendor
+/node_modules
+.phpunit.result.cache
+/public/storage
+/public/build
+/storage/*.key
+.scribe/endpoints.cache/
+.scribe/endpoints/*.yaml
+
+# Apps (Capacitor + Electron)
+apps/node_modules/
+apps/dist/
+apps/android/.gradle/
+apps/android/app/build/
+apps/ios/Pods/
+apps/ios/build/
+apps/.capacitor/
+
+# Capacitor generated platforms (commit only capacitor.config.ts, not platform folders)
+# apps/android/
+# apps/ios/
+
+# Electron
+apps/electron/dist/
+apps/out/
+
+# Build
+/build/
+/coverage/
+
+# Logs & caches
+*.log
+.DS_Store
+.idea/
+*.iml
+*.swp
+
+# IDE & Agent
+.vscode/
+.opencode/
+opencode.json
+.agents/
+
+# Temporary
+*.zip
+*.pdf
+public/clean.php
+public/restructure.php
