@@ -1,0 +1,725 @@
+openapi: 3.0.3
+info:
+  title: API AvaraDesa
+  description: Dokumentasi resmi API AvaraDesa V1 dalam Bahasa Indonesia. Mencakup modul Autentikasi, Informasi Publik, Statistik Demografi, Verifikasi Dokumen, Layanan Surat Mandiri, Mutasi Penduduk, dan Administrasi Desa.
+  version: 1.0.0
+servers:
+  - url: /api/v1
+    description: Server Lokal / Relatif
+paths:
+  /auth/login/warga:
+    post:
+      summary: Login Warga
+      description: Otentikasi masuk portal warga menggunakan NIK dan Nomor Kartu Keluarga.
+      tags:
+        - Autentikasi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - nik
+                - no_kk
+              properties:
+                nik:
+                  type: string
+                  minLength: 16
+                  maxLength: 16
+                  example: "1234567890123456"
+                no_kk:
+                  type: string
+                  minLength: 16
+                  maxLength: 16
+                  example: "1234567890123456"
+      responses:
+        '200':
+          description: Login berhasil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Login berhasil"
+                  user:
+                    type: object
+                  token:
+                    type: string
+                    example: "1|abcdef..."
+        '422':
+          description: Validasi gagal (NIK/No KK tidak terdaftar atau tidak aktif)
+
+  /auth/login/admin:
+    post:
+      summary: Login Administrator
+      description: Otentikasi masuk panel admin menggunakan Username dan Password.
+      tags:
+        - Autentikasi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: "operator"
+                password:
+                  type: string
+                  example: "password123"
+      responses:
+        '200':
+          description: Login berhasil
+        '422':
+          description: Username atau password salah
+
+  /auth/logout:
+    post:
+      summary: Logout Pengguna
+      description: Menghapus token akses saat ini (memerlukan token Bearer).
+      tags:
+        - Autentikasi
+      security:
+        - SanctumAuth: []
+      responses:
+        '200':
+          description: Logout berhasil
+
+  /auth/profile:
+    get:
+      summary: Profil Pengguna
+      description: Mengambil data detail profil pengguna yang saat ini sedang login.
+      tags:
+        - Autentikasi
+      security:
+        - SanctumAuth: []
+      responses:
+        '200':
+          description: Data profil berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "01ARZ3NDEKTSV4RRFFQ61RA5GG"
+                  nik:
+                    type: string
+                    example: "1234567890123456"
+                  nama_lengkap:
+                    type: string
+                    example: "Ali bin Ahmad"
+                  nama_lengkap_formatted:
+                    type: string
+                    example: "Ali bin Ahmad"
+                  tempat_lahir:
+                    type: string
+                    example: "Banda Aceh"
+                  tanggal_lahir:
+                    type: string
+                    format: date
+                    example: "1990-01-15"
+                  tanggal_lahir_formatted:
+                    type: string
+                    example: "15/01/1990"
+                  jenis_kelamin:
+                    type: string
+                    example: "Laki-laki"
+                  alamat:
+                    type: string
+                    example: "Jl. Merdeka No. 1"
+                  created_at:
+                    type: string
+                    format: date-time
+                    example: "2026-06-01T00:00:00Z"
+                  created_at_formatted:
+                    type: string
+                    example: "01 Jun 2026, 07:00"
+
+  /auth/bind-telegram:
+    post:
+      summary: Hubungkan Telegram
+      description: Menghubungkan akun warga dengan Telegram Chat ID untuk menerima notifikasi status pengajuan surat atau mutasi.
+      tags:
+        - Autentikasi
+      security:
+        - SanctumAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - telegram_chat_id
+              properties:
+                telegram_chat_id:
+                  type: string
+                  example: "123456789"
+      responses:
+        '200':
+          description: Telegram berhasil terhubung
+        '403':
+          description: Hanya warga yang dapat menghubungkan Telegram
+
+  /informasi:
+    get:
+      summary: Daftar Informasi Publik
+      description: Mengambil daftar artikel berita, pengumuman, atau agenda desa yang sudah dipublikasikan.
+      tags:
+        - Informasi Publik
+      parameters:
+        - name: kategori
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "Berita"
+      responses:
+        '200':
+          description: Daftar informasi berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "01ARZ3NDEKTSV4RRFFQ61RA5GG"
+                    judul:
+                      type: string
+                      example: "Agenda Gotong Royong Desa"
+                    slug:
+                      type: string
+                      example: "agenda-gotong-royong-desa"
+                    konten:
+                      type: string
+                      example: "<p>Konten artikel...</p>"
+                    kategori:
+                      type: string
+                      example: "Agenda"
+                    cover_image:
+                      type: string
+                      nullable: true
+                      description: URL dinamis gambar sampul (atau null jika kosong)
+                      example: "http://127.0.0.1:8000/storage/informasi/cover.webp"
+                    is_published:
+                      type: boolean
+                      example: true
+                    created_at:
+                      type: string
+                      format: date-time
+                      example: "2026-06-01T00:00:00Z"
+                    created_at_formatted:
+                      type: string
+                      example: "01 Jun 2026, 07:00"
+
+  /informasi/{slug}:
+    get:
+      summary: Detail Informasi Publik
+      description: Mengambil detail informasi publik desa berdasarkan slug artikel.
+      tags:
+        - Informasi Publik
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "musyawarah-desa-2026"
+      responses:
+        '200':
+          description: Detail informasi berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "01ARZ3NDEKTSV4RRFFQ61RA5GG"
+                  judul:
+                    type: string
+                    example: "Agenda Gotong Royong Desa"
+                  slug:
+                    type: string
+                    example: "agenda-gotong-royong-desa"
+                  konten:
+                    type: string
+                    example: "<p>Konten artikel...</p>"
+                  kategori:
+                    type: string
+                    example: "Agenda"
+                  cover_image:
+                    type: string
+                    nullable: true
+                    description: URL dinamis gambar sampul (atau null jika kosong)
+                    example: "http://127.0.0.1:8000/storage/informasi/cover.webp"
+                  is_published:
+                    type: boolean
+                    example: true
+                  created_at:
+                    type: string
+                    format: date-time
+                    example: "2026-06-01T00:00:00Z"
+                  created_at_formatted:
+                    type: string
+                    example: "01 Jun 2026, 07:00"
+        '404':
+          description: Informasi tidak ditemukan
+
+  /statistik/demografi:
+    get:
+      summary: Statistik Demografi
+      description: Mengambil rangkuman statistik demografi kependudukan seperti jenis kelamin, agama, pekerjaan, dan pendidikan.
+      tags:
+        - Statistik Publik
+      responses:
+        '200':
+          description: Data statistik demografi berhasil diambil
+
+  /statistik/layanan:
+    get:
+      summary: Statistik Layanan
+      description: Mengambil statistik volume pengajuan surat dan mutasi penduduk.
+      tags:
+        - Statistik Publik
+      responses:
+        '200':
+          description: Data statistik layanan berhasil diambil
+
+  /verifikasi/{hash}:
+    get:
+      summary: Verifikasi Dokumen TTE
+      description: Memverifikasi keabsahan tanda tangan elektronik (TTE) surat berdasarkan hash QR Code.
+      tags:
+        - Verifikasi
+      parameters:
+        - name: hash
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "abc123def456789"
+      responses:
+        '200':
+          description: Dokumen valid / belum selesai diproses
+        '404':
+          description: Dokumen tidak ditemukan atau tidak valid
+
+  /telegram/webhook:
+    post:
+      summary: Webhook Telegram Bot
+      description: Endpoint internal untuk menerima callback dan pesan dari Telegram Bot API.
+      tags:
+        - Telegram Webhook
+      responses:
+        '200':
+          description: Webhook berhasil diterima
+
+  /surat/kategori:
+    get:
+      summary: Daftar Kategori Surat
+      description: Mengambil daftar jenis surat keterangan yang tersedia untuk diajukan oleh warga secara mandiri.
+      tags:
+        - Layanan Surat Mandiri (Warga)
+      security:
+        - SanctumAuth: []
+      responses:
+        '200':
+          description: Daftar kategori surat berhasil diambil
+
+  /surat/kategori/{id}:
+    get:
+      summary: Detail Kategori Surat
+      description: Mengambil informasi detail persyaratan dan field isian kategori surat tertentu berdasarkan ID.
+      tags:
+        - Layanan Surat Mandiri (Warga)
+      security:
+        - SanctumAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "01ARZ3NDEKTSV4RRFFQ61RA5GG"
+      responses:
+        '200':
+          description: Detail kategori surat berhasil diambil
+
+  /surat/pengajuan:
+    get:
+      summary: Daftar Pengajuan Surat Warga
+      description: Mengambil riwayat daftar pengajuan surat mandiri milik warga yang sedang login beserta statusnya.
+      tags:
+        - Layanan Surat Mandiri (Warga)
+      security:
+        - SanctumAuth: []
+      responses:
+        '200':
+          description: Riwayat pengajuan surat berhasil diambil
+    post:
+      summary: Ajukan Surat Baru
+      description: Membuat permohonan pengajuan surat baru dengan melampirkan berkas persyaratan dan data isian formulir.
+      tags:
+        - Layanan Surat Mandiri (Warga)
+      security:
+        - SanctumAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - kategori_surat_id
+                - data_isian
+                - file_syarat
+              properties:
+                kategori_surat_id:
+                  type: string
+                  example: "01ARZ3NDEKTSV4RRFFQ61RA5GG"
+                data_isian:
+                  type: object
+                  example: { "keperluan": "Melamar Pekerjaan" }
+                file_syarat:
+                  type: object
+                  example: { "ktp": "https://storage.com/ktp.jpg" }
+      responses:
+        '201':
+          description: Pengajuan surat berhasil dibuat
+
+  /surat/pengajuan/{id}:
+    get:
+      summary: Detail Pengajuan Surat Warga
+      description: Mengambil detail data pengajuan surat dan riwayat log tracking proses verifikasi.
+      tags:
+        - Layanan Surat Mandiri (Warga)
+      security:
+        - SanctumAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "01ARZ3NDEKTSV4RRFFQ61RA5GG"
+      responses:
+        '200':
+          description: Detail data pengajuan berhasil diambil
+
+  /mutasi:
+    get:
+      summary: Daftar Pengajuan Mutasi Warga
+      description: Mengambil daftar riwayat permohonan mutasi penduduk (kelahiran/kematian/kedatangan/kepindahan) yang diajukan oleh warga bersangkutan.
+      tags:
+        - Mutasi Penduduk (Warga)
+      security:
+        - SanctumAuth: []
+      responses:
+        '200':
+          description: Riwayat mutasi berhasil diambil
+    post:
+      summary: Ajukan Mutasi Baru
+      description: Mengajukan data mutasi anggota keluarga (misal kelahiran, kematian, kepindahan) beserta bukti dukung.
+      tags:
+        - Mutasi Penduduk (Warga)
+      security:
+        - SanctumAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - nik
+                - jenis_mutasi
+                - tanggal_mutasi
+                - keterangan
+                - dokumen_bukti
+              properties:
+                nik:
+                  type: string
+                  example: "1234567890123456"
+                jenis_mutasi:
+                  type: string
+                  enum: [Kelahiran, Kematian, Kedatangan, Kepindahan]
+                  example: "Kelahiran"
+                tanggal_mutasi:
+                  type: string
+                  format: date
+                  example: "2026-06-01"
+                keterangan:
+                  type: string
+                  example: "Lahir di RSUD"
+                dokumen_bukti:
+                  type: string
+                  example: "https://storage.com/akta.jpg"
+      responses:
+        '201':
+          description: Pengajuan mutasi berhasil dibuat
+
+  /admin/surat/pengajuan:
+    get:
+      summary: [Admin] Daftar Semua Pengajuan Surat
+      description: Mengambil daftar seluruh pengajuan surat warga untuk diverifikasi oleh staf/operator desa.
+      tags:
+        - Administrasi Surat (Admin)
+      security:
+        - SanctumAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "Pending"
+      responses:
+        '200':
+          description: Daftar pengajuan berhasil diambil
+
+  /admin/surat/pengajuan/{id}/approve:
+    post:
+      summary: [Admin] Setujui Pengajuan Surat
+      description: Menyetujui pengajuan surat warga dan menginisiasi pembuatan dokumen PDF bertanda tangan elektronik.
+      tags:
+        - Administrasi Surat (Admin)
+      security:
+        - SanctumAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "01ARZ3NDEKTSV4RRFFQ61RA5GG"
+      responses:
+        '200':
+          description: Pengajuan berhasil disetujui
+
+  /admin/surat/pengajuan/{id}/reject:
+    post:
+      summary: [Admin] Tolak Pengajuan Surat
+      description: Menolak permohonan surat warga dengan menyertakan alasan/catatan penolakan resmi.
+      tags:
+        - Administrasi Surat (Admin)
+      security:
+        - SanctumAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "01ARZ3NDEKTSV4RRFFQ61RA5GG"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - catatan_penolakan
+              properties:
+                catatan_penolakan:
+                  type: string
+                  example: "Dokumen kartu keluarga buram/tidak terbaca."
+      responses:
+        '200':
+          description: Pengajuan berhasil ditolak
+
+  /admin/mutasi:
+    get:
+      summary: [Admin] Daftar Pengajuan Mutasi
+      description: Mengambil daftar seluruh pengajuan mutasi kependudukan warga.
+      tags:
+        - Administrasi Mutasi (Admin)
+      security:
+        - SanctumAuth: []
+      parameters:
+        - name: status_verifikasi
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "Pending"
+        - name: jenis_mutasi
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "Kelahiran"
+      responses:
+        '200':
+          description: Daftar pengajuan mutasi berhasil diambil
+
+  /admin/mutasi/{id}/approve:
+    post:
+      summary: [Admin] Setujui Mutasi
+      description: Menyetujui pengajuan mutasi penduduk serta memperbarui data kependudukan secara otomatis (misalnya status Meninggal/Pindah).
+      tags:
+        - Administrasi Mutasi (Admin)
+      security:
+        - SanctumAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "01ARZ3NDEKTSV4RRFFQ61RA5GG"
+      responses:
+        '200':
+          description: Mutasi berhasil disetujui
+
+  /admin/mutasi/{id}/reject:
+    post:
+      summary: [Admin] Tolak Mutasi
+      description: Menolak pengajuan mutasi kependudukan warga.
+      tags:
+        - Administrasi Mutasi (Admin)
+      security:
+        - SanctumAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "01ARZ3NDEKTSV4RRFFQ61RA5GG"
+      responses:
+        '200':
+          description: Mutasi ditolak
+
+  /admin/informasi:
+    get:
+      summary: [Admin] Daftar Semua Artikel Informasi
+      description: Mengambil daftar seluruh artikel informasi baik yang berstatus Draft maupun Published.
+      tags:
+        - Administrasi Informasi (Admin)
+      security:
+        - SanctumAuth: []
+      responses:
+        '200':
+          description: Daftar artikel berhasil diambil
+    post:
+      summary: [Admin] Buat Artikel Informasi
+      description: Membuat artikel informasi publik baru.
+      tags:
+        - Administrasi Informasi (Admin)
+      security:
+        - SanctumAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - judul
+                - konten
+                - kategori
+              properties:
+                judul:
+                  type: string
+                  example: "Agenda Gotong Royong Desa"
+                konten:
+                  type: string
+                  example: "<p>Akan diadakan pada hari...</p>"
+                kategori:
+                  type: string
+                  example: "Agenda"
+                cover_image:
+                  type: string
+                  example: "https://storage.com/cover.jpg"
+                is_published:
+                  type: boolean
+                  example: true
+      responses:
+        '201':
+          description: Informasi berhasil dibuat
+
+  /admin/informasi/{id}:
+    put:
+      summary: [Admin] Perbarui Artikel Informasi
+      description: Memperbarui isi konten, judul, kategori, atau status publikasi artikel informasi publik.
+      tags:
+        - Administrasi Informasi (Admin)
+      security:
+        - SanctumAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "01ARZ3NDEKTSV4RRFFQ61RA5GG"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                judul:
+                  type: string
+                konten:
+                  type: string
+                kategori:
+                  type: string
+                cover_image:
+                  type: string
+                is_published:
+                  type: boolean
+      responses:
+        '200':
+          description: Informasi berhasil diupdate
+    delete:
+      summary: [Admin] Hapus Artikel Informasi
+      description: Menghapus artikel informasi publik tertentu berdasarkan ID.
+      tags:
+        - Administrasi Informasi (Admin)
+      security:
+        - SanctumAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "01ARZ3NDEKTSV4RRFFQ61RA5GG"
+      responses:
+        '200':
+          description: Informasi berhasil dihapus
+
+  /admin/statistik/clear-cache:
+    post:
+      summary: [Admin] Bersihkan Cache Statistik
+      description: Menghapus cache data statistik agar memicu perhitungan data demografi terupdate.
+      tags:
+        - Administrasi Statistik (Admin)
+      security:
+        - SanctumAuth: []
+      responses:
+        '200':
+          description: Cache statistik berhasil dibersihkan
+
+components:
+  securitySchemes:
+    SanctumAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Gunakan token akses pribadi Bearer token.
