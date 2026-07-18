@@ -1,0 +1,45 @@
+{
+  "name": "apps",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "cap:sync": "npm run build && cap sync",
+    "electron:dev": "electron .",
+    "electron:build": "npm run build && electron-builder"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.4.2",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/camera": "^8.2.1",
+    "@capacitor/core": "^8.4.2",
+    "@capacitor/device": "^8.0.3",
+    "@capacitor/geolocation": "^8.2.0",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.4.2",
+    "@capacitor/network": "^8.0.1",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.3",
+    "@tailwindcss/vite": "^4.3.3",
+    "pinia": "^4.0.2",
+    "tailwindcss": "^4.3.3",
+    "vue": "^3.5.39",
+    "vue-router": "^5.2.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.4.2",
+    "@types/node": "^24.13.2",
+    "@vitejs/plugin-vue": "^6.0.7",
+    "@vue/tsconfig": "^0.9.1",
+    "electron": "^43.1.1",
+    "electron-builder": "^26.15.3",
+    "sass": "^1.101.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.1.1",
+    "vue-tsc": "^3.3.7"
+  }
+}
