@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AvaraDesa</string>
+    <string name="title_activity_main">AvaraDesa</string>
+    <string name="package_name">com.avaradesa.app</string>
+    <string name="custom_url_scheme">com.avaradesa.app</string>
+</resources>
