@@ -1,0 +1,32 @@
+appId: com.avaradesa.app
+productName: Avaradesa
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/**/*
+  - electron/**/*
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: public/favicon.svg
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  icon: public/favicon.svg
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+  icon: public/favicon.svg
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
