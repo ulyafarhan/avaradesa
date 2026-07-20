@@ -22,7 +22,7 @@ AvaraDesa dirancang untuk menyelesaikan masalah inti administrasi desa melalui p
 Ekosistem AvaraDesa beroperasi di bawah satu domain utama yang dibagi menjadi empat modul antarmuka utama:
 
 1. **Portal Publik Desa (Landing Page):** Pintu depan sistem yang dapat diakses publik. Menampilkan profil desa (termasuk foto perangkat desa yang diatur secara dinamis), berita, dan statistik demografi *real-time*.
-2. **Progressive Web App (PWA) Warga:** Area privat bagi warga (login via NIK) untuk mengajukan mutasi kependudukan dan memproses surat menyurat digital (Inertia.js + Vue 3).
+2. **Aplikasi Web & Mobile Warga:** Area privat bagi warga (login via NIK, PIN, atau Biometric) untuk mengajukan mutasi kependudukan dan memproses surat menyurat digital. Tersedia dalam tiga platform: web (Inertia.js + Vue 3 + Tailwind CSS v4), mobile Android/iOS (Capacitor 8 + Vue 3 + TypeScript), dan desktop Windows/Linux (Electron 43).
 3. **Web Dashboard Admin (SPA):** Panel kontrol terpusat bagi Kepala Desa, Sekdes, dan Operator untuk memverifikasi pengajuan, mengatur konten portal publik secara visual menggunakan input dinamis (Repeater) alih-alih editor JSON mentah, mengelola basis pengetahuan chatbot, memantau log sistem, memantau utilisasi RAM & penyimpanan (disk) server secara riil, serta menganalisis grafik statistik lalu lintas unik warga. (Filament PHP v5).
 4. **Telegram Bot & AI Gateway:** Saluran distribusi notifikasi sistem (bebas biaya) dan asisten virtual publik berteknologi AI (Gemini/OpenAI) dengan pemrosesan basis pengetahuan dinamis dari database dan kebijakan penulisan formal (Zero-Emoji).
 
@@ -32,13 +32,18 @@ Ekosistem AvaraDesa beroperasi di bawah satu domain utama yang dibagi menjadi em
 
 | Komponen | Teknologi Terpilih | Tujuan Penggunaan |
 | --- | --- | --- |
-| **Frontend Publik** | Vue 3 / Inertia.js / Vite | Reaktivitas antarmuka klien, integrasi seamless dengan backend Laravel, dan pemuatan data statistik cepat. |
-| **Frontend PWA & Admin** | Vue 3 (Warga) & Filament PHP v5 (Admin) | Antarmuka dinamis dan responsif dengan dukungan panel backoffice admin Filament yang kaya akan widget bawaan. |
-| **Backend Core API** | Laravel 13 | Pemrosesan logika bisnis, RESTful API, kompilasi PDF surat, dan manajemen queue/state. |
-| **Database Engine** | MySQL 8.0+ / MariaDB | Relasional data kependudukan dan tipe data `JSON` untuk skema formulir surat dinamis serta dynamic tags. |
-| **Queue & Cache** | array/file (dev) / Redis (production) / Database Queue | Menangani antrean tugas asinkron (rendering PDF, notifikasi Telegram berantai). |
-| **Integrasi Eksternal** | Telegram API, Gemini API / OpenAI API | Penanganan broadcasting pesan otomatis gratis dan mesin pemrosesan bahasa alami (NLP/RAG). |
-| **Deployment** | Docker di VPS Linux, Nginx (Reverse Proxy) | Isolasi environment aplikasi, efisiensi resource server desa, dan manajemen SSL (HTTPS). |
+| **Frontend Publik** | Vue 3 / Inertia.js / Tailwind CSS v4 / Vite 8 | Reaktivitas antarmuka klien, integrasi seamless dengan backend Laravel, dan pemuatan data statistik cepat. |
+| **Frontend Web Warga** | Inertia.js + Vue 3 / Tailwind CSS v4 | Antarmuka dinamis dan responsif untuk layanan mandiri warga (pengajuan surat, mutasi, profil). |
+| **Mobile App (Android/iOS)** | Capacitor 8 + Vue 3 + TypeScript / Tailwind CSS v4 | Aplikasi native mobile yang me-reuse komponen Vue 3, mendukung kamera, geolokasi, haptics, status bar, dan sinkronisasi offline via SQLite. |
+| **Desktop App** | Electron 43 + Vue 3 + TypeScript | Aplikasi desktop untuk lingkungan dengan koneksi internet terbatas atau kebutuhan akses offline. |
+| **Dashboard Admin** | Filament PHP v5 (Admin) | Panel backoffice admin dengan widget bawaan, server monitoring (RAM & disk), traffic analytics grafik, notifikasi database real-time, dan dark mode. |
+| **Backend Core API** | Laravel 13 / PHP 8.3 | Pemrosesan logika bisnis, RESTful API, kompilasi PDF surat via DOMPDF, job queue async, dan manajemen state. |
+| **AI Engine** | Laravel AI SDK / Multi-Provider (Gemini, OpenAI, DeepSeek, Ollama, Bedrock, Anthropic) | AI multi-provider dengan logika prioritas dan fallback otomatis antar provider. Mendukung chatbot RAG, copywriting artikel, SEO metadata, dan health check. |
+| **Database Engine** | MySQL 8.0+ / MariaDB / SQLite (testing) | Relasional data kependudukan dengan tipe data `JSON` untuk skema formulir surat dinamis, referensi wilayah, dan dynamic tags. |
+| **Queue & Cache** | array/file (dev) / Redis (production) / Database Queue | Menangani antrean tugas asinkron (rendering PDF, notifikasi Telegram & WhatsApp berantai, broadcast). |
+| **Testing & API Docs** | PHPUnit 12 (Unit & Feature) + Vitest 4 (Component) + Scribe 5 (API Documentation) | Cakupan pengujian terintegrasi meliputi unit model, service, request, job, policy, feature journey, keamanan, serta dokumentasi API otomatis. |
+| **Integrasi Eksternal** | Telegram API, WhatsApp Webhook, Multi-Provider AI | Penanganan broadcasting pesan otomatis gratis, gerbang komunikasi warga multi-channel, dan mesin pemrosesan bahasa alami dengan semantic caching. |
+| **Deployment** | Docker di VPS Linux (Ubuntu), Nginx (Reverse Proxy), Supervisor | Isolasi environment aplikasi, efisiensi resource server desa, dan manajemen SSL (HTTPS) via Cloudflare. |
 
 ---
 
@@ -47,7 +52,7 @@ Ekosistem AvaraDesa beroperasi di bawah satu domain utama yang dibagi menjadi em
 ### 4.1. Modul Kependudukan Dinamis & Mutasi (Core Data)
 
 * Sistem harus memfasilitasi pembuatan basis data *Single Source of Truth* berdasarkan NIK dan Nomor KK.
-* Warga dapat mengajukan 4 jenis mutasi mandiri via PWA: Kelahiran, Kematian, Kedatangan, dan Kepindahan.
+* Warga dapat mengajukan 4 jenis mutasi mandiri via aplikasi web/mobile: Kelahiran, Kematian, Kedatangan, dan Kepindahan.
 * Admin harus memverifikasi bukti dokumen mutasi sebelum sistem secara otomatis memperbarui status kependudukan dan menyinkronkan data statistik di Portal Publik.
 
 ### 4.2. Modul Pelayanan Surat Mandiri (Self-Service) & TTE
@@ -63,17 +68,38 @@ Ekosistem AvaraDesa beroperasi di bawah satu domain utama yang dibagi menjadi em
 * Sistem menyediakan *endpoint* publik untuk memvalidasi QR Code TTE yang terdapat pada PDF/kertas cetakan surat.
 * Halaman verifikasi menampilkan status keaslian dokumen, tanggal rilis, dan identitas pemohon.
 
-### 4.4. Modul Telegram Gateway & AI Chatbot (Dynamic FAQ, RAG & Semantic Cache)
+### 4.4. Modul Telegram & WhatsApp Gateway dan AI Chatbot (Dynamic FAQ, RAG & Semantic Cache)
 
-* Sistem harus menyediakan mekanisme *binding* akun antara PWA warga dan *Chat ID* Telegram.
+* Sistem harus menyediakan mekanisme *binding* akun antara aplikasi warga dan *Chat ID* Telegram.
 * Setiap transisi status pengajuan surat atau mutasi otomatis memicu notifikasi *push* ke Telegram warga.
-* Sistem *Chatbot* memproses pesan masuk menggunakan model Gemini AI/OpenAI yang diinjeksi dengan *prompt* khusus berisi konteks regulasi desa.
+* Sistem *Chatbot* memproses pesan masuk menggunakan mesin AI multi-provider yang mendukung fallback otomatis (prioritas: Gemini, OpenAI, DeepSeek, Ollama, Bedrock) — jika provider utama gagal, sistem akan beralih ke provider berikutnya secara otomatis tanpa intervensi admin.
+* AI *engine* menggunakan **Laravel AI SDK** yang menyediakan antarmuka terpadu untuk berbagai provider AI, serta logika fallback kustom (`FallbackAiService`) dengan konfigurasi prioritas provider via database (`pengaturan_desa`).
 * Admin dapat mengelola dynamic FAQ dan data basis pengetahuan AI secara dinamis melalui dashboard admin (tabel `bot_knowledges`), yang otomatis di-cache 24 jam untuk meminimalisasi overhead token AI.
 * **Mekanisme Caching Cerdas**:
-  * **Exact Match Cache**: Pencarian cepat berbasis MD5 hash pesan ter-normalisasi di Redis (durasi 24 jam).
+  * **Exact Match Cache**: Pencarian cepat berbasis MD5 hash pesan ter-normalisasi di cache (durasi 24 jam).
   * **Semantic Cache**: Tokenisasi berbasis *stopword* bahasa Indonesia dan pencocokan menggunakan Jaccard Similarity serta Levenshtein Distance (untuk kueri pendek) dengan threshold minimal **80% (0.80)** terhadap 100 log interaksi terakhir.
   * Jawaban yang diambil dari cache tidak akan memicu pemanggilan API AI eksternal, melainkan langsung dibalas dengan konsumsi token `0` (*zero cost*).
+* Sistem juga menyediakan endpoint webhook untuk **WhatsApp Gateway** yang siap diintegrasikan dengan layanan WhatsApp Business API untuk pengembangan notifikasi multi-channel di masa depan.
 * Seluruh notifikasi status surat dan jawaban chatbot harus mematuhi kebijakan bebas emoji (Zero-Emoji) dan menggunakan template pesan formal.
+
+### 4.5. Modul Autentikasi Multi-Metode
+
+* Sistem menyediakan tiga metode autentikasi warga:
+  * **Login NIK+KK** (standar): Verifikasi dua faktor menggunakan Nomor Induk Kependudukan dan Nomor Kartu Keluarga.
+  * **Login PIN 6-Digit** (cepat): Autentikasi cepat setelah registrasi PIN awal, dengan sistem lockout otomatis selama 15 menit setelah 5 kali percobaan PIN salah.
+  * **Login Biometric** (sidik jari/FaceID): Autentikasi instan dari perangkat mobile menggunakan kunci biometrik yang telah diregistrasikan sebelumnya.
+* Registrasi PIN 6-digit dilakukan sekali dengan verifikasi ulang NIK+KK. PIN disimpan dalam bentuk *hash* bcrypt bersama penghitung percobaan (`pin_attempts`) dan waktu kunci (`locked_until`).
+* Biometric key disimpan sebagai string token unik hasil enkripsi perangkat, diverifikasi secara *server-side* dengan pencocokan eksak.
+* Seluruh aktivitas autentikasi (login, registrasi PIN, bind Telegram, registrasi biometric) dicatat dalam tabel `audit_logs` untuk kepentingan *audit trail*.
+* Login admin menggunakan *username* dan *password* dengan proteksi *throttle* via middleware Laravel.
+
+### 4.6. Modul Sinkronisasi Offline
+
+* Sistem menyediakan REST API sinkronisasi delta berbasis *timestamp* (`pull` dan `push`) untuk mendukung operasi offline pada perangkat mobile.
+* **Pull endpoint** (`GET /api/v1/sync/pull?since=...`): Menarik perubahan data pengajuan surat, mutasi penduduk, dan data penduduk sejak *timestamp* tertentu (ISO8601). Hanya data milik warga yang bersangkutan yang dikembalikan.
+* **Push endpoint** (`POST /api/v1/sync/push`): Menerima operasi offline (pengajuan surat, mutasi) yang dibuat saat perangkat tidak terhubung internet, dengan mekanisme idempotensi berbasis *client UUID* untuk mencegah duplikasi data.
+* Perangkat mobile menyimpan database lokal berbasis SQLite yang mereplikasi data inti pengguna untuk akses offline penuh.
+* Antrean sinkronisasi (*sync queue*) pada perangkat mengelola operasi yang tertunda, dengan mekanisme *retry* otomatis saat koneksi pulih.
 
 ---
 
@@ -81,7 +107,7 @@ Ekosistem AvaraDesa beroperasi di bawah satu domain utama yang dibagi menjadi em
 
 ### 5.1. Alur Pengajuan Surat Berbasis State Machine
 
-1. **[Warga]** Login PWA -> Pilih Kategori Surat -> Isi Data Variabel Tambahan -> Unggah Syarat -> Submit. *(Status: `PENDING`)*
+1. **[Warga]** Login Aplikasi -> Pilih Kategori Surat -> Isi Data Variabel Tambahan -> Unggah Syarat -> Submit. *(Status: `PENDING`)*
 2. **[Sistem]** Mengirim notifikasi ke grup Telegram Operator Desa.
 3. **[Admin]** Buka Dashboard -> Cek Dokumen.
    * Jika Syarat Tidak Valid -> Klik Tolak -> Isi Alasan. *(Status: `REJECTED`, Warga mendapat notifikasi)*
@@ -328,8 +354,8 @@ CREATE INDEX idx_traffic_logs_created_at ON traffic_logs(created_at);
 
 ## 8. Panduan Antarmuka & UX (User Experience)
 
-* **Aksesibilitas Multi-Generasi:** PWA ditujukan untuk berbagai kelompok umur warga. UI harus bersih, menggunakan jenis font tanpa kait (Sans-Serif), kontras warna rasio tinggi, dan tidak menyertakan elemen animasi berat.
-* **Mobile-First Design:** Semua formulir persuratan, daftar berita desa, dan dasbor PWA dioptimalkan untuk pengoperasian satu tangan pada layar ponsel standar (rasio potret).
+* **Aksesibilitas Multi-Generasi:** Aplikasi web & mobile ditujukan untuk berbagai kelompok umur warga. UI harus bersih, menggunakan jenis font tanpa kait (Sans-Serif), kontras warna rasio tinggi, dan tidak menyertakan elemen animasi berat.
+* **Mobile-First Design:** Semua formulir persuratan, daftar berita desa, dan dasbor warga dioptimalkan untuk pengoperasian satu tangan pada layar ponsel standar (rasio potret).
 * **Indikator Status Jelas:** Setiap fase pengajuan surat (Pending, Proses, Selesai) divisualisasikan dengan diagram alir berjenjang atau garis waktu interaktif (*timeline*) dengan penanda warna yang intuitif tanpa emoji.
 
 ---

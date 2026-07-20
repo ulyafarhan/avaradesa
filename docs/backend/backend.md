@@ -7,6 +7,9 @@ Dokumentasi ini merinci struktur arsitektur, spesifikasi teknis, serta panduan p
 ## 1. Tumpukan Teknologi Backend
 * **Runtime**: PHP 8.3+ (Strictly Typed)
 * **Framework**: Laravel 13.x (API Engine & Antrean Job)
+* **AI SDK**: Laravel AI (`^0.9.1`) dengan 15+ provider driver
+* **Cloud SDK**: AWS SDK PHP (`^3.388`)
+* **API Docs**: Scribe (`^5.10`)
 * **Admin Backoffice**: Filament PHP v5.6.5
 * **Cache & Antrean**: Array/Redis
 * **Document Processor**: Barryvdh DomPDF (`^3.0`) & Simple QrCode (`^4.2`)
@@ -14,8 +17,9 @@ Dokumentasi ini merinci struktur arsitektur, spesifikasi teknis, serta panduan p
 ---
 
 ## 2. Struktur Direktori Utama
-* `app/Http/Controllers/Api/`: Controller yang menangani request/response 25 endpoint API.
-* `app/Services/`: Lapisan logika bisnis terisolasi (TelegramService, GeminiProvider, StatistikService).
+* `app/Http/Controllers/Api/`: Controller yang menangani request/response 50+ endpoint API (`routes/api.php`).
+* `app/Services/`: Lapisan logika bisnis terisolasi (TelegramService, AiService, StatistikService, dll).
+* `app/Services/AiProviders/`: 6 kelas provider AI (GeminiProvider, OpenAiProvider, DeepSeekProvider, OllamaProvider, BedrockProvider, BaseAiProvider).
 * `app/Jobs/`: Eksekusi tugas asinkronus (Pembuatan PDF Surat & Broadcast Telegram).
 * `app/Models/`: Definisi entitas model Eloquent beserta relasi database.
 
@@ -35,22 +39,27 @@ Dokumentasi ini merinci struktur arsitektur, spesifikasi teknis, serta panduan p
 4. Konfigurasikan kredensial database di `.env`, lalu jalankan migrasi beserta pengisian data awal:
    ```bash
    php artisan migrate:fresh --seed
+   php artisan storage:link
    ```
-5. Setup Webhook Bot Telegram:
+5. Build aset frontend untuk produksi:
+   ```bash
+   npm install && npm run build
+   ```
+6. Setup Webhook Bot Telegram:
    ```bash
    php artisan telegram:setup-webhook
    ```
-6. Jalankan Server Backend & Queue Worker:
+7. Jalankan Server Backend & Queue Worker:
    * Server: `php artisan serve`
    * Queue Worker: `php artisan queue:work`
 
 ---
 
 ## 4. Pengujian & Penjaminan Kualitas (QA)
-Sistem backend dilengkapi dengan 22 file test otomatis berbasis PHPUnit 12:
-* **Unit Testing**: Memvalidasi fungsi helper, generator hash, dan integrasi provider AI.
-* **Feature Testing**: Memvalidasi siklus hidup otentikasi, alur persetujuan surat, dan audit log.
-* **Cakupan**: 185 test methods, 313 assertions, 0 failures.
+Sistem backend dilengkapi dengan 40 file test otomatis berbasis PHPUnit 12:
+* **Unit Testing** (23 file): Memvalidasi model, policy, request, job, service, dan provider AI.
+* **Feature Testing** (17 file): Memvalidasi siklus hidup otentikasi, CRUD informasi publik, pengajuan surat, mutasi penduduk, sinkronisasi, webhook Telegram, audit log, performa halaman frontend, simulasi alur end-to-end warga-admin, dan keamanan (SQL injection, XSS, path traversal, rate limiting, mass assignment, CORS).
+* **Cakupan**: ±270 test methods, ±400 assertions, 0 failures (per konstribusi terbaru).
 * **Benchmark**: API demografi 107ms/5query, API layanan 21ms/4query.
 
 ### Cara Menjalankan Tes:
@@ -60,35 +69,53 @@ composer run test
 
 ### Optimasi Query (Bebas N+1 Query)
 * Eager loading di 6 titik (Widget, Resource, Controller, Job) untuk menumpas N+1 query.
-* **PengaturanDesa** menerapkan cache all-in-one: seluruh konfigurasi desa di-cache dalam satu key Redis, mengurangi query dari 15+ per request menjadi 0.
 * **AuditLogResource** menggunakan batched lookup (single query untuk seluruh baris per halaman) alih-alih lazy loading per baris.
 * **AdminStatsOverview** menerapkan cache 5 menit untuk agregat dashboard, menghemat puluhan query tiap render.
 * 19 + 9 database indexes baru ditambahkan pada kolom yang sering difilter (`status`, `tanggal`, `jenis_kelamin`, `kode_surat`, dll).
+* **Catatan**: PengaturanDesa saat ini belum menggunakan cache all-in-one — setiap pemanggilan `PengaturanDesa::get()` menghasilkan query terpisah (15+ query per request di `HandleInertiaRequests` — lihat isu #TODO).
 
-## 5. Optimasi Performa
+## 5. Arsitektur AI & Optimasi Performa
 
-Sistem backend AvaraDesa mengimplementasikan hibrida **Exact Match Cache** dan **Semantic Cache** pada `OpenAiProvider` dan `GeminiProvider` untuk menghemat penggunaan token API AI dan mempercepat respons chatbot (<2ms jika hit cache). Selain itu, sistem menggunakan penanganan failover berantai (*fallback*) untuk menjamin ketersediaan layanan.
+Sistem AI AvaraDesa menggunakan arsitektur **dual-layer** yang menggabungkan Laravel AI SDK dengan class provider kustom untuk menangani berbagai kebutuhan: chatbot warga, generate SEO metadata, dan copywriting konten.
 
-### 5.1. Alur Kerja Caching AI:
-1. **Normalisasi**: Pesan masuk dipangkas spasi kosongnya dan diubah ke huruf kecil (lowercase).
-2. **Exact Match Cache**:
-   * Sistem memeriksa cache Redis dengan key `ai_exact_[md5(pesan_normal)]`.
-   * Jika tidak ada di Redis, sistem mencari kecocokan eksak pada log 24 jam terakhir di tabel `chatbot_logs`.
-   * Jika ditemukan, jawaban di-cache ke Redis selama 24 jam dan langsung dikembalikan ke pengguna.
-3. **Semantic Cache**:
-   * Jika exact match tidak ditemukan, sistem memuat 100 log interaksi unik terakhir dalam 48 jam terakhir dari cache Redis `ai_recent_logs_semantic` (durasi simpan 5 menit).
-   * **Tokenisasi & Stopwords**: Pesan masuk dan pesan log dipecah menjadi token kata setelah membuang karakter non-alfanumerik serta kata hubung umum bahasa Indonesia (*stopwords* seperti: *yang, di, dan, itu, dengan, untuk, pada, ke, dari, ini, adalah, akan, atau, saya, anda, kami, kita*).
-   * **Jaccard Similarity**: Mengukur rasio irisan token dibanding gabungan token kata unik.
-   * **Levenshtein Distance**: Untuk pesan pendek (<20 karakter), jarak Levenshtein dihitung untuk mengukur kedekatan edit teks.
-   * **Threshold & Output**: Jika skor kemiripan tertinggi mencapai **>= 80% (0.80)**, sistem mengembalikan balasan ter-cache, menyimpan relasi pencarian baru ke Redis, dan mencatat log dengan penggunaan token `0` (*zero cost*).
-   * Jika di bawah 80%, request baru akan diteruskan ke API Provider AI (OpenAI/Gemini).
+### 5.1. Dual-Layer Architecture AI
 
-### 5.2. Mekanisme Multi-AI Fallback & Prioritas Dinamis:
-Untuk menjamin keandalan layanan AI tanpa perlu mengedit berkas `.env` di server production, sistem menggunakan kelas `FallbackAiService` yang membungkus antarmuka `AiProviderInterface`.
-* **Penyimpanan Konfigurasi**: Seluruh rantai penyedia AI cadangan disimpan dalam format JSON (`ai_providers_list`) pada tabel database `pengaturan_desa`.
-* **Pengurutan Prioritas**: Setiap penyedia dikonfigurasi melalui Filament dengan kolom `priority`. Sistem secara otomatis mengurutkan pemanggilan dari prioritas angka terkecil ke terbesar.
-* **Failover Otomatis**: Jika pemanggilan API dari penyedia utama mengalami limitasi kuota (HTTP 429), token habis/salah (HTTP 401), atau error koneksi lainnya sehingga menghasilkan nilai `null` atau melemparkan exception, sistem otomatis merekam peringatan log dan langsung mencoba penyedia cadangan berikutnya.
-* **Kompatibilitas Mundur**: Apabila konfigurasi daftar penyedia dinamis di database kosong, sistem akan otomatis beralih menggunakan kredensial tunggal default yang tertera pada berkas `.env` (Gemini atau OpenAI).
+**Layer 1 — Laravel AI SDK (`laravel/ai` ^0.9.1)**
+SDK resmi Laravel yang menyediakan antarmuka seragam untuk 15+ provider driver:
+`anthropic`, `azure`, `bedrock`, `cohere`, `deepseek`, `gemini`, `groq`, `jina`, `mistral`, `ollama`, `openai`, `openai-compatible`, `openrouter`, `voyageai`, `xai`.
+
+Digunakan untuk integrasi chatbot, embedding vektor, dan generasi konten ringan.
+
+**Layer 2 — Custom AiProviders (6 file)**
+Kelas provider kustom di `app/Services/AiProviders/` untuk kontrol granular dan fallback cerdas:
+| File | Provider | Fungsi Utama |
+|------|----------|-------------|
+| `BaseAiProvider.php` | — | Abstract class dengan method bantu (call API, parse response, hitung token) |
+| `GeminiProvider.php` | Google Gemini | Generate SEO metadata, copywriting, dan chatbot |
+| `OpenAiProvider.php` | OpenAI (GPT) | Generate SEO, copywriting, dan jawaban chatbot |
+| `DeepSeekProvider.php` | DeepSeek | Alternatif hemat biaya untuk chatbot |
+| `OllamaProvider.php` | Ollama (lokal) | Inference offline tanpa koneksi internet |
+| `BedrockProvider.php` | AWS Bedrock | Integrated via AWS SDK, untuk deployment enterprise |
+
+### 5.2. Mekanisme Multi-AI Fallback & Prioritas Dinamis
+
+Failover berantai diimplementasikan oleh `FallbackAiService` yang membungkus `AiProviderInterface`:
+* **Penyimpanan Konfigurasi**: Rantai penyedia cadangan disimpan dalam format JSON (`ai_providers_list`) di tabel `pengaturan_desa`.
+* **Pengurutan Prioritas**: Setiap penyedia punya kolom `priority` — sistem memanggil dari prioritas terkecil ke terbesar.
+* **resolveProviderInstance()**: Mendukung 2 provider aktif saat ini (Gemini dan OpenAI) dengan fallback otomatis jika salah satu gagal (HTTP 429/401/timeout).
+* **Kompatibilitas Mundur**: Jika konfigurasi dinamis kosong, sistem fallback ke kredensial `.env` (Gemini atau OpenAI).
+
+### 5.3. Caching AI (Exact Match + Semantic Cache)
+
+Untuk menghemat token API dan mempercepat respons chatbot (<2ms jika cache hit):
+1. **Normalisasi**: Pesan dipangkas spasi, di-lowercase.
+2. **Exact Match**: Cek Redis `ai_exact_[md5(pesan)]` → jika tidak ada, cek tabel `chatbot_logs` 24 jam terakhir. Jika cocok, cache ke Redis 24 jam.
+3. **Semantic Cache**: Load 100 log unik 48 jam terakhir dari Redis `ai_recent_logs_semantic` (5 menit TTL).
+   * **Tokenisasi & Stopwords**: Buang non-alfanumerik dan stopwords bahasa Indonesia.
+   * **Jaccard Similarity**: Rasio irisan token / gabungan token.
+   * **Levenshtein Distance**: Untuk pesan <20 karakter.
+   * **Threshold ≥80%**: Kembalikan jawaban ter-cache dengan zero token cost.
+   * **<80%**: Teruskan ke API provider.
 
 ---
 

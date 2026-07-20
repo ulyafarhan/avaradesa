@@ -22,18 +22,18 @@
 
 | # | Halaman | Platform | Wajib |
 |---|---------|----------|-------|
-| 1 | Login Warga (NIK+KK) | Flutter Mobile | ✅ |
-| 2 | Dashboard Warga + Stat Cards | Flutter Mobile | ✅ |
-| 3 | Pengajuan Surat — Form | Flutter Mobile | ✅ |
-| 4 | Tracking Surat — Status Timeline | Flutter Mobile | ✅ |
-| 5 | Profil Warga + Data Keluarga | Flutter Mobile | ✅ |
-| 6 | Chatbot AI — Tanya Prosedur | Flutter Mobile | ✅ |
+| 1 | Login Warga (NIK+KK) | Capacitor Mobile | ✅ |
+| 2 | Dashboard Warga + Stat Cards | Capacitor Mobile | ✅ |
+| 3 | Pengajuan Surat — Form | Capacitor Mobile | ✅ |
+| 4 | Tracking Surat — Status Timeline | Capacitor Mobile | ✅ |
+| 5 | Profil Warga + Data Keluarga | Capacitor Mobile | ✅ |
+| 6 | Chatbot AI — Tanya Prosedur | Capacitor Mobile | ✅ |
 | 7 | Admin Panel — Dashboard Filament | Web Desktop | ✅ |
 | 8 | Admin Panel — Approve Surat | Web Desktop | ✅ |
-| 9 | Dark Mode — Halaman Home | Flutter Mobile + Web | ✅ |
+| 9 | Dark Mode — Halaman Home | Capacitor Mobile + Web | ✅ |
 | 10 | Portal Publik — Informasi Desa | Web Browser | ✅ |
-| 11 | Verifikasi QR — Hasil | Flutter / Web | ✅ |
-| 12 | Aplikasi Windows — Layout Desktop | Flutter Windows | opsional |
+| 11 | Verifikasi QR — Hasil | Capacitor / Web | ✅ |
+| 12 | Aplikasi Windows — Layout Desktop | Electron Windows | opsional |
 
 **Format:** PNG/JPG, resolusi 1080p, crop rapi, annotasi dengan panah/kotak merah.
 
@@ -72,18 +72,18 @@
 
 **Yang harus diukur:**
 
-| Metrik | Server DOMPDF | Flutter Client | Sumber Data |
+| Metrik | Server DOMPDF | Capacitor Client | Sumber Data |
 |--------|---------------|---------------|-------------|
 | **CPU usage (avg)** | ? | ? | `top` / Task Manager |
 | **Memory usage (peak)** | ? | ? | `memory_get_peak_usage()` / DevTools |
 | **Response time (p95)** | ? | ? | `dd()`, microtime |
-| **Waktu render PDF** | ? | ? | Timer di Flutter |
+| **Waktu render PDF** | ? | ? | Timer di Capacitor |
 | **Ukuran file output** | ? | ? | filesize() |
 
 **Prosedur benchmark:**
 1. Render 5 jenis surat (domisili, tidak mampu, izin, keterangan, SKTM)
 2. Server: gunakan `dd(microtime(true))` sebelum dan sesudah DomPDF
-3. Client: gunakan `Stopwatch` di Flutter
+3. Client: gunakan `Stopwatch` di Capacitor
 4. Catat ukuran server ram di `free -m` sebelum dan sesudah
 5. Masukkan tabel hasil ke Section 9.3 proposal
 
@@ -309,10 +309,10 @@ export default function () {
 
 ---
 
-### P2-02: Flutter Performance Profiling
+### P2-02: Capacitor Performance Profiling
 
 **Tindakan:**
-1. Buka Flutter DevTools di device Android low-end (2 GB RAM)
+1. Buka Chrome DevTools / Capacitor DevTools di device Android low-end (2 GB RAM)
 2. Ukur startup time, memory usage, average FPS
 3. Cantumkan di Section 9
 
@@ -380,7 +380,7 @@ Lihat P1-02.
 Tambahan section kecil di Section 7/8:
 1. Backup database harian (cloud + local)
 2. Restore procedure
-3. Data recovery dari Flutter sync jika server mati total
+3. Data recovery dari Capacitor sync jika server mati total
 
 ---
 
@@ -427,7 +427,7 @@ Perluas script video 5 menit dengan timing per detik.
 | **P1-05** | ROI table | AI | ✅ DONE | — |
 | **P1-06** | Hook pembuka narasi | AI | ✅ DONE | — |
 | **P2-01** | Proper RAG | — | ⏭️ SKIP | — |
-| **P2-02** | Flutter profiling | TIM | ⏭️ SKIP | — |
+| **P2-02** | Capacitor profiling | TIM | ⏭️ SKIP | — |
 | **P2-03** | K6 load test | TIM | ⚠️ BELUM | 9 Agustus |
 | **P2-04** | OWASP ZAP | AI | ✅ DONE (manual) | — |
 | **P2-05** | CI security audit | AI | ✅ DONE | — |
@@ -470,7 +470,7 @@ Perluas script video 5 menit dengan timing per detik.
 | Load test k6 (P1-02, P2-03) | Minggu 3 |
 | Login alternatif (P1-03) | Minggu 3 |
 | Proper RAG (P2-01) | Minggu 3-4 |
-| Flutter profiling (P2-02) | Minggu 4 |
+| Capacitor profiling (P2-02) | Minggu 4 |
 | CI security audit (P2-05) | Minggu 4 |
 | User persona (P2-06) | Minggu 4 |
 | **9 Agustus 2026 — FINAL PRESENTATION** | ✅ |

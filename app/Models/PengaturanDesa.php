@@ -49,19 +49,6 @@ class PengaturanDesa extends Model
         'deskripsi',
     ];
 
-    public function __construct(array $attributes = [])
-    {
-        parent::__construct($attributes);
-
-        try {
-            if (!\Illuminate\Support\Facades\Schema::hasTable('pengaturan_desa') && \Illuminate\Support\Facades\Schema::hasTable('pengaturan_desa')) {
-                $this->setTable('pengaturan_desa');
-            }
-        } catch (\Throwable $e) {
-            // Ignore database connection exceptions during early bootstrap/migrations
-        }
-    }
-
     /**
      * Casting atribut ke tipe data native PHP.
      *

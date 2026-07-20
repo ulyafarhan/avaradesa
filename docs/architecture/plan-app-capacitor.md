@@ -11,7 +11,7 @@
 ## 2. API & Sync Strategy
 - **Base URL**: `/api/v1` (Reuse API web existing, YAGNI over-engineered split `/api/app/v1`)
 - **Offline Data**: IndexedDB (LocalForage) / SQLite Capacitor plugin
-- **Sync**: Delta timestamp pulling & transaction queue push (same as original Flutter plan, but written in TypeScript)
+- **Sync**: Delta timestamp pulling & transaction queue push (same as original sync plan, written in TypeScript)
 
 ## 3. Directory Layout
 - `apps/` — standalone SPA

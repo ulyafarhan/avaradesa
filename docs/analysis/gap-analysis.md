@@ -21,7 +21,7 @@
 |------|--------|------------|
 | **P1-01: Pilot test desa** | ❌ **SKIP** | Tidak cukup waktu. Ganti dengan "rencana pilot" di proposal |
 | **P1-02: Load test k6** | ❌ **BELUM** | Perlu server running + k6. Bisa ditanya juri QA |
-| **P1-03: Login alternatif** | ✅ **FIXED** | NIK (16) + PIN (6) + Biometric. Backend + Flutter done |
+| **P1-03: Login alternatif** | ✅ **FIXED** | NIK (16) + PIN (6) + Biometric. Backend + Capacitor done |
 | **P1-04: OpenSID verification** | ✅ **DONE** | 10 fitur verified (apples-to-apples), tabel jujur |
 | **P1-05: ROI table** | ✅ **DONE** | Rp 51 juta/tahun per desa |
 | **P1-06: Hook pembuka** | ✅ **DONE** | Cerita Ibu Sari + Pak Kades |
@@ -31,7 +31,7 @@
 | Item | Status | Keterangan |
 |------|--------|------------|
 | **P2-01: RAG** | ❌ **SKIP** | Keyword matching + LIKE (sudah di-escape) cukup |
-| **P2-02: Flutter profiling** | ❌ **SKIP** | Tim bisa lakukan nanti jika ada waktu |
+| **P2-02: Capacitor profiling** | ❌ **SKIP** | Tim bisa lakukan nanti jika ada waktu |
 | **P2-03: k6** | ❌ **SKIP** | Sama dengan P1-02 |
 | **P2-04: OWASP ZAP** | ❌ **SKIP** | Manual security audit sudah dilakukan (40+ issue fixed) |
 | **P2-05: CI security** | ✅ **DONE** | `composer audit` + `npm audit` di pipeline |

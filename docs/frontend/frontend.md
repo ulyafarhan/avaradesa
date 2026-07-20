@@ -10,15 +10,15 @@ Dokumentasi ini merinci spesifikasi teknis, arsitektur antarmuka klien, integras
 * **Pre-processor & Styling**: Tailwind CSS v4.3.0
 * **Build Tool**: Vite 8 (`^8.0.16`)
 * **Desain Ikon**: `@lucide/vue` (`^1.17.0`)
-* **Popup & Notifikasi**: SweetAlert2 (kustomisasi warna Teal/Slate)
+* **Notifikasi**: Toast.vue (komponen kustom) + DOMPurify (`^3.4.11`) untuk sanitasi HTML
 * **Testing Tool**: Vitest (`^4.1.8`) & `@vue/test-utils`
 
 ---
 
 ## 2. Struktur Direktori Utama
 * `resources/js/Pages/`: Komponen halaman (Portal Publik, Portal Warga, Autentikasi).
-* `resources/js/Components/`: Komponen UI reusable (Card, Modal, Button, Dynamic Input, SkeletonLoader).
-* `resources/js/Layouts/`: Layout utama (PublicLayout untuk tamu, AppLayout untuk halaman login, CitizenLayout untuk portal warga).
+* `resources/js/Components/`: Komponen UI reusable (AppButton, AppCard, FormInput, FormSelect, Pagination, StatusBadge, StepIndicator, SkeletonLoader, Toast, EmptyState).
+* `resources/js/Layouts/`: Layout utama (PublicLayout untuk halaman publik, CitizenLayout untuk portal warga terotentikasi).
 * `resources/js/Utils/`: Berkas utilitas pembantu (imageCompressor, alert).
 
 ---
@@ -31,22 +31,25 @@ Seluruh halaman dikembangkan berbasis SFC (menggabungkan `<script setup>`, `<tem
 ### 3.2. Form Isian Dinamis (Dynamic Form Rendering)
 Pada halaman pengajuan surat (`Create.vue`), elemen input di-render secara dinamis berdasarkan data skema JSONB (`schema_isian`) yang dikirimkan oleh backend. Hal ini memungkinkan admin menambahkan tipe surat baru tanpa perlu memodifikasi kode frontend.
 
-### 3.3. Integrasi Dialog & Notifikasi Premium (SweetAlert2)
-Sistem memiliki modul penanganan dialog terpadu di [alert.js](resources/js/Utils/alert.js) yang mematikan *style default* bawaan SweetAlert2 dan menyuntikkan *class utility* Tailwind CSS kita:
-- **Konfirmasi Kustom**: Menampilkan konfirmasi tindakan penting (seperti keluar sesi pada `CitizenLayout.vue`) dengan tombol bulat penuh bernuansa **Teal** (setuju) dan **Slate** (batal) serta modal melengkung modern (*rounded-3xl*).
-- **Toast & Status**: Menyediakan notifikasi melayang di pojok kanan atas dengan bilah progress pemuatan reaktif untuk notifikasi instan yang estetik.
+### 3.3. Komponen Notifikasi Toast & Dialog
+Sistem notifikasi menggunakan [Toast.vue](resources/js/Components/Toast.vue) untuk notifikasi ringan instan di pojok kanan atas, dan [alert.js](resources/js/Utils/alert.js) untuk dialog konfirmasi (keluar sesi, tindakan penting):
+- **Toast.vue**: Komponen notifikasi kustom dengan progress bar reaktif, mendukung tipe sukses/error/info.
+- **alert.js**: Membungkus SweetAlert2 dengan Tailwind CSS kustom — tombol bulat Teal (setuju) dan Slate (batal), modal *rounded-3xl* modern.
+- **DOMPurify**: Digunakan untuk sanitasi HTML pada konten yang di-render dari input pengguna, mencegah serangan XSS.
 
-### 3.4. Transisi Gambar Halus & Skeleton Loader
-Untuk memberikan pengalaman memuat yang mulus (*premium user experience*), beranda publik ([Home.vue](resources/js/Pages/Public/Home.vue)) mengimplementasikan skeleton loader asinkronus:
-- **Pulsing Placeholder**: Menampilkan kotak berdenyut (`animate-pulse bg-slate-200/60`) selama browser mengunduh berkas gambar sampul berita.
-- **Fade-in Transition**: Gambar yang selesai diunduh akan ditampilkan secara perlahan lewat transisi CSS opacity (`opacity-100 duration-300`) sehingga menghindari kemunculan gambar secara patah-patah (*popping effect*).
+### 3.4. Skeleton Loader & Transisi Gambar
+Komponen [SkeletonLoader.vue](resources/js/Components/SkeletonLoader.vue) menyediakan placeholder animasi untuk berbagai tipe konten:
+- **Variant**: Mendukung 4 varian — `text`, `card`, `table-row`, dan `avatar` — masing-masing dengan `animate-pulse` Tailwind.
+- **Prop `count`**: Mengatur jumlah baris/elemen placeholder yang dirender.
+- **Penggunaan**: Dipakai di halaman publik (`Home.vue`, halaman informasi) dan portal warga untuk memberikan umpan balik visual selama data dimuat.
+- **Fade-in Gambar**: Gambar sampul berita di Home.vue menggunakan skeleton `animate-pulse bg-slate-200/60` selama unduhan, lalu transisi CSS `opacity-100 duration-300` untuk menghindari *popping effect*.
 
 ---
 
 ## 4. Panduan Menjalankan Frontend & Testing
 
 ### Pemasangan & Menjalankan Development Server
-1. Instal dependensi NPM (termasuk SweetAlert2):
+1. Instal dependensi NPM:
    ```bash
    npm install
    ```
@@ -60,7 +63,11 @@ Untuk memberikan pengalaman memuat yang mulus (*premium user experience*), beran
    ```
 
 ### Menjalankan Pengujian Unit Frontend
-Pengujian unit antarmuka menggunakan **Vitest** dan **jsdom** untuk mensimulasikan DOM browser secara lokal.
+Terdapat **7 file spec** untuk pengujian komponen Vue menggunakan **Vitest** dan **jsdom**:
+- `Login.spec.js`, `Home.spec.js`, `Statistik.spec.js` — halaman publik
+- `Profile.spec.js`, `Dashboard.spec.js`, `Create.spec.js` — portal warga
+- `imageCompressor.spec.js` — utilitas
+
 ```bash
 npx vitest run
 ```

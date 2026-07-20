@@ -12,13 +12,13 @@
 |-------|---------|-----------|------------|
 | **Framework** | CodeIgniter 3.1 (rilis 2016) | Laravel 13 (rilis 2026) | **AvaraDesa** — 10 tahun lebih modern |
 | **Arsitektur** | Semi-Laravel (campuran CI + Illuminate components) | Laravel Full-stack + Filament | **AvaraDesa** — konsisten, clean |
-| **Mobile App** | ❌ Tidak ada (web-only) | ✅ Flutter Android + Windows | **AvaraDesa** — satu-satunya yang punya |
+| **Mobile App** | ❌ Tidak ada (web-only) | ✅ Capacitor (Android/iOS) + Electron (Windows/Mac/Linux) | **AvaraDesa** — satu-satunya yang punya |
 | **Database ORM** | CodeIgniter Query Builder + Eloquent (hybrid) | Eloquent ORM murni | **AvaraDesa** — konsisten |
 | **Admin Panel** | Blade custom | Filament 5 (auto-generated) | **AvaraDesa** — development 60% lebih cepat |
 | **Frontend** | Blade + jQuery | Vue 3 + Inertia + Tailwind 4 | **AvaraDesa** — modern, reactive |
 | **API** | Tidak ada REST API murni | 29 REST API endpoint + Sanctum | **AvaraDesa** — API-first |
-| **PDF** | `html2pdf` (server-side, heavy) | `pdf` Flutter (client-side) + DomPDF fallback | **AvaraDesa** — 80% hemat CPU |
-| **Testing** | PHPUnit 9 (50-100 tests) | PHPUnit 12 + Vitest + Flutter Test (580+ assertions) | **AvaraDesa** — 5x lebih banyak |
+| **PDF** | `html2pdf` (server-side, heavy) | pdf client-side (Capacitor/Electron) + DomPDF fallback | **AvaraDesa** — 80% hemat CPU |
+| **Testing** | PHPUnit 9 (50-100 tests) | PHPUnit 12 + Vitest + Capacitor/Electron Test (580+ assertions) | **AvaraDesa** — 5x lebih banyak |
 | **CI/CD** | ❌ Tidak ada | ✅ GitHub Actions (3 job paralel) | **AvaraDesa** |
 | **Docker** | ❌ Tidak ada | ✅ Docker + docker-compose | **AvaraDesa** |
 | **Lisensi** | GPL-3.0 (restriktif) | MIT (bebas) | **AvaraDesa** — lebih fleksibel |
@@ -44,7 +44,7 @@
 | **Multi-AI Chatbot** | ✅ (5 provider) | ❌ | **⭐ Sangat Tinggi** — belum ada di SID manapun |
 | **QR SHA-256 Verifikasi** | ✅ | ❌ | **⭐ Tinggi** — verifikasi dokumen publik |
 | **Dark Mode Full** | ✅ | ❌ | **⭐ Sedang** — untuk UI/UX |
-| **Flutter Windows Desktop** | ✅ | ❌ | **⭐ Tinggi** — SID pertama dengan desktop app |
+| **Electron Windows Desktop** | ✅ | ❌ | **⭐ Tinggi** — SID pertama dengan desktop app |
 | **Adaptive Layout** | ✅ | ❌ | **⭐ Sedang** — mobile/tablet/desktop |
 | **Cache Tags Redis** | ✅ | ❌ | **⭐ Sedang** — performance |
 | **Multi-AI Fallback** | ✅ | ❌ | **⭐ Sangat Tinggi** — 5 provider auto-switch |
@@ -53,7 +53,7 @@
 
 | Kriteria Lomba (Bobot) | OpenSID | AvaraDesa | **Selisih** |
 |------------------------|---------|-----------|-------------|
-| Inovasi & Orisinalitas (25%) | 5/10 — Web-only, legacy tech | **9/10** — Offline-first, AI, Flutter, QR crypto | **+4** |
+| Inovasi & Orisinalitas (25%) | 5/10 — Web-only, legacy tech | **9/10** — Offline-first, AI, Capacitor/Electron, QR crypto | **+4** |
 | Dampak & Viability (20%) | 8/10 — Ribuan desa sudah pakai | 6/10 — Belum pilot, teori | **-2** |
 | Metodologi & Code Quality (20%) | 4/10 — CI3 legacy, testing minimal | **9/10** — Laravel 13, 580 tests, CI/CD | **+5** |
 | UI/UX & Accessibility (10%) | 4/10 — jQuery, no dark mode | **8/10** — Vue 3, Tailwind, dark mode, adaptive | **+4** |
@@ -118,7 +118,7 @@ OpenSID hanya unggul di **Dampak & Viability** karena sudah terbukti di ribuan d
 - Aman: No KK tidak perlu diinput lagi setelah registrasi
 - Bisa ditambah opsi "Lupa PIN" → verifikasi via NIK + No KK
 
-**Effort implementasi:** 2-3 jam (backend + Flutter)
+**Effort implementasi:** 2-3 jam (backend + Capacitor)
 
 #### Opsi B: NIK + Biometric (Android Fingerprint/Face Unlock)
 
@@ -133,7 +133,7 @@ OpenSID hanya unggul di **Dampak & Viability** karena sudah terbukti di ribuan d
 
 **Keunggulan:** Paling cepat, paling mudah untuk warga
 **Kekurangan:** Hanya Android 6+, hanya device dengan fingerprint
-**Effort:** 4 jam (Flutter `local_auth` package)
+**Effort:** 4 jam (Capacitor biometric plugin)
 
 #### Opsi C: WhatsApp/Telegram Magic Link
 
@@ -214,10 +214,10 @@ LUPA PIN:
 | 1 | Backend: endpoint `POST /auth/login` → tambah field `pin` | `AuthController.php` | 1 jam |
 | 2 | Backend: endpoint `POST /auth/register-pin` → set PIN 6 digit | `AuthController.php` | 1 jam |
 | 3 | Backend: validasi NIK + PIN → return token | Sanctum | 0.5 jam |
-| 4 | Flutter: LoginScreen → tambah field PIN | `login_screen.dart` | 1 jam |
-| 5 | Flutter: SplashScreen → auto-login via secure token | `splash_screen.dart` | 0.5 jam |
-| 6 | Flutter: First-time flow → NIK+KK dulu, lalu set PIN | Screen baru | 2 jam |
-| 7 | Flutter: Biometric (fingerprint) → `local_auth` package | `auth_local.dart` | 2 jam |
+| 4 | Capacitor: LoginScreen → tambah field PIN | `LoginScreen.vue` | 1 jam |
+| 5 | Capacitor: SplashScreen → auto-login via secure token | `SplashScreen.vue` | 0.5 jam |
+| 6 | Capacitor: First-time flow → NIK+KK dulu, lalu set PIN | Screen baru | 2 jam |
+| 7 | Capacitor: Biometric (fingerprint) → biometric plugin | `authBiometric.ts` | 2 jam |
 | | **Total** | | **8 jam** |
 
 ---

@@ -14,19 +14,36 @@ API Documentation untuk AvaraDesa — Sistem Informasi Desa Terpadu
     ```
 
     ## Authentication
-    API ini menggunakan Laravel Sanctum untuk autentikasi. Sebagian besar endpoint memerlukan token autentikasi.
+    API ini menggunakan **Laravel Sanctum** untuk autentikasi. Sebagian besar endpoint memerlukan token autentikasi.
 
-    ### Untuk Warga
-    Login menggunakan NIK (16 digit):
+    ### Login Warga (via NIK)
+
+    Login menggunakan NIK (16 digit) dan No. KK (16 digit):
+
     ```bash
     POST /auth/login/warga
     {
-      "nik": "1234567890123456"
+      "nik": "1234567890123456",
+      "no_kk": "1234567890123456"
     }
     ```
 
-    ### Untuk Admin
+    ### Login Warga (via PIN)
+
+    Alternatif login menggunakan NIK dan PIN (6 digit):
+
+    ```bash
+    POST /auth/login-pin
+    {
+      "nik": "1234567890123456",
+      "pin": "123456"
+    }
+    ```
+
+    ### Login Admin
+
     Login menggunakan username dan password:
+
     ```bash
     POST /auth/login/admin
     {
@@ -35,7 +52,41 @@ API Documentation untuk AvaraDesa — Sistem Informasi Desa Terpadu
     }
     ```
 
-    Setelah login berhasil, Anda akan menerima token yang harus disertakan di header setiap request:
+    ### Mendapatkan Token
+
+    Setelah login berhasil, Anda akan menerima token beserta informasi user:
+
+    **Response Login Warga:**
+    ```json
+    {
+      "message": "Login berhasil",
+      "token": "1|abc123def456...",
+      "user": {
+        "nik": "1234567890123456",
+        "nama": "John Doe"
+      },
+      "has_pin": true,
+      "has_biometric": false
+    }
+    ```
+
+    **Response Login Admin:**
+    ```json
+    {
+      "message": "Login berhasil",
+      "token": "1|xyz789abc123...",
+      "user": {
+        "id": 1,
+        "username": "operator",
+        "name": "Operator Desa"
+      }
+    }
+    ```
+
+    Token warga memiliki scope terbatas (akses data kependudukan milik sendiri), sedangkan token admin memiliki scope lebih luas (manajemen data desa).
+
+    Sertakan token di header setiap request:
+
     ```
     Authorization: Bearer {token}
     ```
@@ -62,7 +113,8 @@ API Documentation untuk AvaraDesa — Sistem Informasi Desa Terpadu
     ```
 
     ## Rate Limiting
-    API ini menggunakan rate limiting standar Laravel (60 requests per menit per IP).
+    API ini menerapkan rate limiting terpisah:
+    - **Endpoint login**: maksimal 5 request per menit per IP
+    - **Endpoint API umum**: maksimal 60 request per menit per IP
 
     <aside>Kode contoh untuk bekerja dengan API tersedia di area gelap di sebelah kanan (atau sebagai bagian dari konten di mobile).</aside>
-

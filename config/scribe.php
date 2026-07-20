@@ -63,18 +63,79 @@ return [
             ```
 
             ## Authentication
-            API ini menggunakan Laravel Sanctum untuk autentikasi. Sebagian besar endpoint memerlukan token autentikasi.
+            API ini menggunakan **Laravel Sanctum** untuk autentikasi. Sebagian besar endpoint memerlukan token autentikasi.
 
-            ### Untuk Warga
-            Login menggunakan NIK (16 digit):
+            ### Login Warga (via NIK)
+
+            Login menggunakan NIK (16 digit) dan No. KK (16 digit):
+
             ```bash
             POST /auth/login/warga
             {
-              "nik": "1234567890123456"
+              "nik": "1234567890123456",
+              "no_kk": "1234567890123456"
             }
             ```
 
-            Setelah login berhasil, Anda akan menerima token yang harus disertakan di header setiap request:
+            ### Login Warga (via PIN)
+
+            Alternatif login menggunakan NIK dan PIN (6 digit):
+
+            ```bash
+            POST /auth/login-pin
+            {
+              "nik": "1234567890123456",
+              "pin": "123456"
+            }
+            ```
+
+            ### Login Admin
+
+            Login menggunakan username dan password:
+
+            ```bash
+            POST /auth/login/admin
+            {
+              "username": "operator",
+              "password": "password123"
+            }
+            ```
+
+            ### Mendapatkan Token
+
+            Setelah login berhasil, Anda akan menerima token beserta informasi user:
+
+            **Response Login Warga:**
+            ```json
+            {
+              "message": "Login berhasil",
+              "token": "1|abc123def456...",
+              "user": {
+                "nik": "1234567890123456",
+                "nama": "John Doe"
+              },
+              "has_pin": true,
+              "has_biometric": false
+            }
+            ```
+
+            **Response Login Admin:**
+            ```json
+            {
+              "message": "Login berhasil",
+              "token": "1|xyz789abc123...",
+              "user": {
+                "id": 1,
+                "username": "operator",
+                "name": "Operator Desa"
+              }
+            }
+            ```
+
+            Token warga memiliki scope terbatas (akses data kependudukan milik sendiri), sedangkan token admin memiliki scope lebih luas (manajemen data desa).
+
+            Sertakan token di header setiap request:
+
             ```
             Authorization: Bearer {token}
             ```
@@ -101,7 +162,9 @@ return [
             ```
 
             ## Rate Limiting
-            API ini menggunakan rate limiting standar Laravel (60 requests per menit per IP).
+            API ini menerapkan rate limiting terpisah:
+            - **Endpoint login**: maksimal 5 request per menit per IP
+            - **Endpoint API umum**: maksimal 60 request per menit per IP
 
             <aside>Kode contoh untuk bekerja dengan API tersedia di area gelap di sebelah kanan (atau sebagai bagian dari konten di mobile).</aside>
         INTRO,
@@ -289,7 +352,7 @@ return [
         'placeholder' => '{YOUR_AUTH_TOKEN}',
 
         // Informasi tambahan terkait autentikasi untuk pengguna. Mendukung Markdown dan HTML.
-        'extra_info' => 'Untuk mendapatkan token, login terlebih dahulu menggunakan endpoint <code>POST /api/v1/auth/login/warga</code> (untuk warga) atau <code>POST /api/v1/auth/login/admin</code> (untuk admin). Token yang didapat kemudian digunakan sebagai Bearer token di header Authorization.',
+        'extra_info' => 'Untuk mendapatkan token, warga dapat login via <code>POST /api/v1/auth/login/warga</code> (NIK + No. KK), <code>POST /api/v1/auth/login-pin</code> (NIK + PIN), atau biometric jika tersedia. Admin login via <code>POST /api/v1/auth/login/admin</code> (username + password). Token warga memiliki scope terbatas, sedangkan token admin memiliki scope lebih luas.',
     ],
 
     /*

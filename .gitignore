@@ -48,3 +48,6 @@ opencode.json
 *.pdf
 public/clean.php
 public/restructure.php
+
+# Other
+docs/audit-lengkap-*.md
