@@ -1,20 +1,6 @@
 # AvaraDesa — Sistem Informasi Desa Terpadu
 
-> **Platform Digital Administrasi Desa Berbasis Cloud dengan Integrasi Multi-AI, Aplikasi Mobile/Desktop (Vue 3 + Capacitor + Electron), dan Arsitektur Production-Grade**
-
----
-
-> **Pembaruan 2026-07-23:** Activity log system menggunakan spatie/laravel-activitylog v4.12.3 dengan SystemLogger service (12 titik logging, retensi 90 hari). Fitur Aspirasi Warga untuk menampung masukan publik. Navigasi panel admin direstruktur - Layanan Warga, Informasi Desa, Pengaturan. Perbaikan bug auth redirect, PendudukPolicy, dan kolom ULID. Pembaruan seeder untuk data lebih natural.
->
-> Detail selengkapnya di bagian Changelog.
-
----
-
-> **Pembaruan 2026-07-21:** Audit keamanan OWASP Top 10 (2021) dengan 51 temuan selesai diperbaiki. Integrasi WhatsApp dual-provider (wa-gateway + Fonnte) dan notifikasi dual-channel (Telegram + WhatsApp). Gateway sync endpoint untuk FAQ, kategori surat, dan template notifikasi. Format nomor HP otomatis internasional dan deduplikasi file KTP/KK.
->
-> Detail: `docs/audit-lengkap-2026-07-20.md`.
-
----
+Sistem Informasi Desa Terpadu berbasis Laravel + Filament + Vue 3. Multi-platform (web, mobile, desktop).
 
 - [1. Pendahuluan](#1-pendahuluan)
 - [2. Spesifikasi Teknis](#2-spesifikasi-teknis)
@@ -40,18 +26,18 @@
 
 ### 1.1 Tentang AvaraDesa
 
-AvaraDesa merupakan platform sistem informasi desa terpadu yang mendigitalisasi seluruh tata kelola administrasi pada tingkat Desa. Melalui pendekatan *self-service*, beban kerja administratif yang sebelumnya berpusat pada aparatur desa dialihkan secara aman kepada partisipasi aktif masyarakat melalui portal layanan mandiri berbasis web (PWA) dan aplikasi multiplatform (Vue 3 + Capacitor untuk Android/iOS + Electron untuk Windows/Mac/Linux).
+AvaraDesa adalah platform administrasi desa berbasis web, mobile (Android/iOS), dan desktop (Windows/Mac/Linux). Warga bisa mengurus surat, cek data kependudukan, dan lacak status pengajuan secara mandiri — tanpa harus bolak-balik ke kantor desa. Admin (kepala desa, sekdes, operator) kelola semuanya dari panel Filament.
 
 ### 1.2 Visi dan Misi
 
-**Visi**: Mewujudkan ekosistem administrasi desa yang transparan, akuntabel, dan efisien berbasis teknologi cloud guna mengoptimalkan kualitas pelayanan publik.
+**Visi**: Administrasi desa yang transparan, akuntabel, dan efisien.
 
 **Misi**:
-- Digitalisasi menyeluruh terhadap administrasi kependudukan dan pencatatan sipil
-- Penyediaan sistem pengajuan surat mandiri untuk memangkas birokrasi fisik
-- Implementasi kecerdasan buatan (AI) multi-provider untuk asisten virtual pelayanan 24 jam
-- Penjaminan keamanan data sensitif warga melalui audit trail, kriptografi SHA-256, dan security headers berlapis
-- Penyediaan aplikasi multiplatform (Android, iOS, Windows, Mac, Linux) untuk aksesibilitas warga di berbagai perangkat
+- Digitalisasi administrasi kependudukan dan pencatatan sipil
+- Pengajuan surat mandiri tanpa birokrasi fisik
+- Asisten AI 24 jam untuk layanan informasi warga
+- Keamanan data warga (audit trail, enkripsi, security headers)
+- Aplikasi multiplatform biar aksesibel di perangkat mana pun
 
 ### 1.3 Target Pengguna
 
@@ -171,9 +157,9 @@ Sistem dibangun menggunakan arsitektur monolit modern 4 layer yang menggabungkan
 
 ### 3.2 Penjelasan Layer
 
-- **Frontend Client Layer**: Menangani antarmuka pengguna melalui tiga kanal: PWA/SPA berbasis Vue 3 + Inertia.js untuk web, aplikasi Capacitor untuk Android/iOS, dan aplikasi Electron untuk Windows/Mac/Linux. Dilengkapi DOMPurify untuk sanitasi XSS.
-- **Backend & Admin Platform**: Mesin pemrosesan utama berbasis Laravel 13 dengan panel Filament v5. Menyediakan REST API dengan Sanctum auth, 5 authorization policies, security headers berlapis (CSP, HSTS, X-Frame-Options), rate limiting, dan activity log system yang mencatat 12 titik operasional penting.
-- **Data & External Service Layer**: Penyimpanan data via MySQL dengan 26+ tabel relasional, caching via Redis, cloud storage S3/R2, integrasi 16 AI provider via Laravel AI SDK ditambah 6 custom class provider dengan fallback chain otomatis, notifikasi via Telegram Bot API, dan webhook WhatsApp.
+- **Frontend**: Tiga kanal — web (Vue 3 + Inertia), mobile (Capacitor), desktop (Electron). Sanitasi XSS via DOMPurify.
+- **Backend**: Laravel 13 + Filament 5 untuk panel admin. REST API via Sanctum, 5 policy RBAC, security headers (CSP, HSTS), rate limiting, activity log.
+- **Data & Eksternal**: MySQL/Redis. 16 AI provider via Laravel AI SDK + 6 custom class dengan fallback chain. Notifikasi Telegram + WhatsApp.
 
 ---
 
@@ -359,46 +345,87 @@ avaradesa/
 
 ## 6. Skema Database
 
-Sistem didukung oleh **26+ tabel** yang saling terintegrasi, terdiri dari tabel utama, tabel referensi, dan tabel sistem:
+26+ tabel dengan relasi sebagai berikut:
 
-### 6.1 Tabel Utama (19+)
+```mermaid
+erDiagram
+    administrators ||--o{ pengajuan_surat : "diverifikasi oleh"
+    administrators ||--o{ mutasi_penduduk : "diverifikasi oleh"
+    administrators ||--o{ informasi_publik : "ditulis oleh"
+    administrators ||--o{ telegram_broadcast_queue : "dibuat oleh"
+    administrators ||--o{ tracking_pengajuan_surat : "diupdate oleh"
 
-| Tabel | Deskripsi | Relasi Kunci |
-|:------|:----------|:-------------|
-| `administrators` | Kredensial admin (Kepala Desa, Sekdes, Operator) | SoftDeletes |
-| `penduduk` | Data kependudukan, NIK 16 digit sebagai PK | FK → keluarga, 5 FK → ref_* |
-| `keluarga` | Manajemen Kartu Keluarga (KK) | FK → penduduk (kepala) |
-| `pengajuan_surat` | Pengajuan dokumen dari warga (ULID PK) | FK → penduduk, kategori_surat |
-| `tracking_pengajuan_surat` | Riwayat status pengajuan | FK → pengajuan_surat |
-| `kategori_surat` | Template jenis surat (schema JSON dinamis) | SoftDeletes |
-| `mutasi_penduduk` | Pencatatan kelahiran, kematian, kedatangan, kepindahan | FK → penduduk |
-| `informasi_publik` | Berita dan pengumuman desa + SEO fields | FK → administrators, SoftDeletes |
-| `bot_knowledges` | Basis pengetahuan chatbot (FAQ + RAG context) | SoftDeletes |
-| `chatbot_logs` | Log interaksi warga dengan bot AI | — |
-| `knowledge_keywords` | Kata kunci untuk pencocokan knowledge base | FK → bot_knowledges |
-| `activity_log` | Activity log engine (spatie/laravel-activitylog) | Polymorphic (causer + subject) |
-| `audit_logs` | Jejak audit legacy (deprecated, migrasi ke activity_log) | Polymorphic user |
-| `traffic_logs` | Statistik kunjungan publik | — |
-| `telegram_broadcast_queue` | Antrean notifikasi massal | FK → administrators |
-| `inventaris_fasilitas` | Data fasilitas publik desa | SoftDeletes |
-| `pengaturan_desa` | Konfigurasi dinamis (Key-Value) | — |
-| `pengaturan_frontend` | Konfigurasi identitas frontend | — |
-| `referensi_wilayah` | Hierarki wilayah (provinsi→desa) | Self-referencing FK |
-| `agent_conversations` | Riwayat percakapan AI agent | — |
-| `personal_access_tokens` | Token Sanctum (expiry 24 jam) | Polymorphic |
-| `notifications` | Notifikasi Laravel | Polymorphic |
+    keluarga ||--o{ penduduk : "anggota"
+    penduduk ||--o{ pengajuan_surat : "mengajukan"
+    penduduk ||--o{ mutasi_penduduk : "subjek mutasi"
 
-### 6.2 Tabel Referensi (Lookup)
+    kategori_surat ||--o{ pengajuan_surat : "jenis surat"
+    pengajuan_surat ||--o{ tracking_pengajuan_surat : "riwayat status"
 
-| Tabel | Data |
-|:------|:-----|
-| `ref_agama` | Islam, Kristen, Katolik, Hindu, Buddha, Konghucu, Lainnya |
-| `ref_pendidikan` | Tidak/Belum Sekolah, SD, SMP, SMA, D1-D3, D4/S1, S2, S3 |
-| `ref_pekerjaan` | 12 jenis pekerjaan |
-| `ref_status_perkawinan` | Belum Kawin, Kawin, Cerai Hidup, Cerai Mati |
-| `ref_status_keluarga` | 7 status dalam keluarga |
-| `kategori_informasi` | Berita, Pengumuman, Agenda, Artikel, Kegiatan |
-| `ref_jenis_fasilitas` | 11 jenis fasilitas |
+    bot_knowledges ||--o{ knowledge_keywords : "kata kunci"
+
+    referensi_wilayah ||--o{ referensi_wilayah : "parent-child"
+
+    administrators {
+        ulid id PK
+        string username
+        enum role
+    }
+    keluarga {
+        string no_kk PK "16 digit"
+        string kepala_keluarga_nik FK "nullable"
+        text alamat
+        string dusun
+        string rt_rw
+    }
+    penduduk {
+        string nik PK "16 digit"
+        string no_kk FK
+        string nama_lengkap
+        date tanggal_lahir
+        enum jenis_kelamin "L / P"
+        enum status_mutasi "Tetap | Pindah | Meninggal"
+        string telegram_chat_id "nullable, unique"
+    }
+    pengajuan_surat {
+        ulid id PK
+        string nomor_registrasi UK "SKU/2024/001"
+        string nik_pemohon FK
+        ulid kategori_surat_id FK
+        enum status "Pending | Diproses | Disetujui | Ditolak | Selesai"
+        string qr_hash "nullable, unique"
+        ulid diverifikasi_oleh FK "nullable"
+    }
+    tracking_pengajuan_surat {
+        ulid id PK
+        ulid pengajuan_surat_id FK
+        string status_sebelumnya
+        string status_baru
+        ulid diupdate_oleh FK "nullable"
+    }
+    mutasi_penduduk {
+        ulid id PK
+        string nik FK
+        enum jenis_mutasi "Kelahiran | Kematian | Kedatangan | Kepindahan"
+        enum status_verifikasi "Pending | Disetujui | Ditolak"
+    }
+    kategori_surat {
+        ulid id PK
+        string kode_surat UK "SKU, SKCK"
+        json schema_isian
+        json syarat_dokumen
+    }
+    informasi_publik {
+        ulid id PK
+        string slug UK
+        boolean is_published
+        ulid author_id FK
+    }
+```
+
+**Tabel pendukung**: `pengaturan_desa`, `pengaturan_frontend`, `inventaris_fasilitas`, `traffic_logs`, `chatbot_logs`, `agent_conversations`, `activity_log`, `notifications`, `personal_access_tokens`, `knowledge_keywords`, `referensi_wilayah` (self-referencing hierarki provinsi→kabupaten→kecamatan→desa).
+
+**Tabel referensi**: `ref_agama`, `ref_pendidikan`, `ref_pekerjaan`, `ref_status_perkawinan`, `ref_status_keluarga`, `kategori_informasi`, `ref_jenis_fasilitas`.
 
 ---
 
