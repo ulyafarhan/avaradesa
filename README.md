@@ -141,7 +141,7 @@ Sistem dibangun menggunakan arsitektur monolit modern 4 layer yang menggabungkan
 ┌─────────────────────────────────────────────────────────────────┐
 │                  Data & External Service Layer                    │
 ├─────────────────────────────────────────────────────────────────┤
-│  Database: MySQL 8.0+ / MariaDB (30+ tabel)                     │
+│  Database: MySQL 8.0+ / MariaDB (38 tabel)                      │
 │  Cache & Queue: Redis 6+ (session, cache, queue worker)         │
 │  Cloud Storage: S3 / Cloudflare R2 (auto-switch)                │
 │  AI Multi-Provider (16 Laravel AI SDK + 6 Custom Class):         │
@@ -345,7 +345,7 @@ avaradesa/
 
 ## 6. Skema Database
 
-26+ tabel dengan relasi sebagai berikut:
+38 tabel dengan relasi sebagai berikut:
 
 ```mermaid
 erDiagram
@@ -908,7 +908,7 @@ npm run lint
 
 ### Fase 1: Backend API & Core Engine — **Selesai**
 
--   Database relasional 30+ tabel + 7 referensi
+-   Database relasional 38 tabel (business + system + referensi)
 - 57 endpoint API + 20 rute web
 - Integrasi multi-AI dual layer (16 SDK + 6 custom class)
 - Fallback chain Gemini → OpenAI dengan provider siap pakai: DeepSeek, Ollama, Bedrock
