@@ -26,7 +26,7 @@ class AddSecurityHeaders
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
         $scriptSrc = app()->environment('production') 
-            ? "'self' 'nonce-{$nonce}'" 
+            ? "'self' 'nonce-{$nonce}' 'unsafe-inline' 'unsafe-eval'" 
             : "'self' 'unsafe-inline' 'unsafe-eval'";
 
         $csp = implode('; ', [
