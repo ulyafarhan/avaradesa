@@ -4,30 +4,15 @@
 
 ---
 
-> **✨ Update 2026-07-23: Activity Log System & Aspirasi Warga**
-> - ✅ **Activity log system**: spatie/laravel-activitylog v4.12.3 — 12 titik logging (config, auth, notif, webhook, upload, exception, cleanup)
-> - ✅ **SystemLogger service** wrapper dengan retensi 90 hari, log name `system`
-> - ✅ **Aspirasi Warga**: fitur publik baru di Layanan Warga — Filament resource + activity_log event `aspirasi.kirim`
-> - ✅ **Log Aktivitas** di menu Pengaturan: read-only, filterable by event/subject/causer
-> - ✅ **Navigasi restructure**: Layanan → Layanan Warga, Konten → Informasi Desa, Pengaturan consolidasi
-> - ✅ **Log Migrasi**: `php artisan log:migrate-from-audit` — pindahkan data audit_logs lama ke activity_log
-> - ✅ **Bug fixes**: auth redirect guard, PendudukPolicy instanceof, section namespace, ULID BIGINT→STRING(26)
-> - ✅ **Seeder updates**: surat desa natural, rt_rw fixed, per-role passwords
+> **Pembaruan 2026-07-23:** Activity log system menggunakan spatie/laravel-activitylog v4.12.3 dengan SystemLogger service (12 titik logging, retensi 90 hari). Fitur Aspirasi Warga untuk menampung masukan publik. Navigasi panel admin direstruktur — Layanan Warga, Informasi Desa, Pengaturan. Perbaikan bug auth redirect, PendudukPolicy, dan kolom ULID. Pembaruan seeder untuk data lebih natural.
 >
-> Selengkapnya: `docs/changelog-2026-07-23.md`.
+> Detail: `docs/changelog-2026-07-23.md`.
 
 ---
 
-> **✨ Update 2026-07-21: Full Security Audit & WhatsApp Integration**
-> - ✅ **51/51 temuan FIXED** (8 critical, 6 high, 10 medium, 12 low, 15 ponytail)
-> - ✅ **WhatsApp dual-provider**: wa-gateway (self-hosted) + Fonnte (cloud)
-> - ✅ **Notifikasi dual-channel**: Telegram + WhatsApp dengan template admin-editable
-> - ✅ **Gateway sync endpoint**: FAQ + kategori surat + template notifikasi sinkron
-> - ✅ **FAQ auto-reply** di WhatsApp webhook via knowledge base
-> - ✅ **Phone auto-format**: nomor HP warga otomatis format internasional
-> - ✅ **File deduplication**: reuse foto KTP/KK dari biodata saat pengajuan surat
+> **Pembaruan 2026-07-21:** Audit keamanan OWASP Top 10 (2021) dengan 51 temuan selesai diperbaiki. Integrasi WhatsApp dual-provider (wa-gateway + Fonnte) dan notifikasi dual-channel (Telegram + WhatsApp). Gateway sync endpoint untuk FAQ, kategori surat, dan template notifikasi. Format nomor HP otomatis internasional dan deduplikasi file KTP/KK.
 >
-> Selengkapnya: `docs/audit-lengkap-2026-07-20.md`.
+> Detail: `docs/audit-lengkap-2026-07-20.md`.
 
 ---
 
@@ -925,20 +910,20 @@ npm run lint
 
 ### Fase 4: WhatsApp & Notifikasi — **Selesai**
 
-- ✅ WhatsApp dual-provider (wa-gateway + Fonnte)
-- ✅ Notifikasi dual-channel (Telegram + WhatsApp) untuk status surat & mutasi
-- ✅ Template notifikasi admin-editable (12 template di Filament)
-- ✅ Gateway sync endpoint untuk wa-gateway auto-reply
-- ✅ FAQ auto-reply di WhatsApp webhook
+- WhatsApp dual-provider (wa-gateway + Fonnte)
+- Notifikasi dual-channel (Telegram + WhatsApp) untuk status surat & mutasi
+- Template notifikasi admin-editable (12 template di Filament)
+- Gateway sync endpoint untuk wa-gateway auto-reply
+- FAQ auto-reply di WhatsApp webhook
 
 ### Fase 5: Activity Log System — **Selesai**
 
-- ✅ spatie/laravel-activitylog v4.12.3
-- ✅ SystemLogger service wrapper (12 titik logging)
-- ✅ ActivityLogResource Filament (filterable, read-only)
-- ✅ 90-day retention dengan system:cleanup
-- ✅ log:migrate-from-audit command
-- ✅ Aspirasi Warga dengan logging event
+- spatie/laravel-activitylog v4.12.3
+- SystemLogger service wrapper (12 titik logging)
+- ActivityLogResource Filament (filterable, read-only)
+- 90-day retention dengan system:cleanup
+- log:migrate-from-audit command
+- Aspirasi Warga dengan logging event
 
 ### Fase 6: Pengembangan Lanjutan — **Dalam Pengerjaan**
 
