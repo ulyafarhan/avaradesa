@@ -4,9 +4,9 @@
 
 ---
 
-> **Pembaruan 2026-07-23:** Activity log system menggunakan spatie/laravel-activitylog v4.12.3 dengan SystemLogger service (12 titik logging, retensi 90 hari). Fitur Aspirasi Warga untuk menampung masukan publik. Navigasi panel admin direstruktur — Layanan Warga, Informasi Desa, Pengaturan. Perbaikan bug auth redirect, PendudukPolicy, dan kolom ULID. Pembaruan seeder untuk data lebih natural.
+> **Pembaruan 2026-07-23:** Activity log system menggunakan spatie/laravel-activitylog v4.12.3 dengan SystemLogger service (12 titik logging, retensi 90 hari). Fitur Aspirasi Warga untuk menampung masukan publik. Navigasi panel admin direstruktur - Layanan Warga, Informasi Desa, Pengaturan. Perbaikan bug auth redirect, PendudukPolicy, dan kolom ULID. Pembaruan seeder untuk data lebih natural.
 >
-> Detail: `docs/changelog-2026-07-23.md`.
+> Detail selengkapnya di bagian Changelog.
 
 ---
 
@@ -957,7 +957,9 @@ npm run lint
 
 ## 16. Lisensi
 
-Proyek ini dilisensikan di bawah **MIT License**. Detail lisensi dapat dibaca di berkas `LICENSE`.
+Proyek ini dilisensikan di bawah **AGPL v3 License** — lisensi copyleft yang mewajibkan setiap pihak yang memodifikasi dan mendistribusikan aplikasi ini untuk merilis kode sumbernya di bawah lisensi yang sama. Detail lisensi dapat dibaca di berkas `LICENSE`.
+
+Lisensi ini memungkinkan desa mana pun untuk mengadopsi, memodifikasi, dan menjalankan AvaraDesa secara gratis. Untuk penggunaan tertutup (internal perusahaan/komersial tanpa distribusi publik), model lisensi enterprise tersedia.
 
 ---
 

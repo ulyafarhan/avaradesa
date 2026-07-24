@@ -131,6 +131,10 @@ class WhatsAppService
 
     // ── WA Gateway Provider ───────────────────────────────────────────
 
+    /**
+     * Mengirim pesan teks WhatsApp melalui self-hosted wa-gateway (Baileys).
+     * Melakukan normalisasi nomor, logging otomatis, dan penanganan error koneksi.
+     */
     protected function sendViaGateway(string $target, string $message): bool
     {
         try {
@@ -180,6 +184,10 @@ class WhatsAppService
         }
     }
 
+    /**
+     * Mengirim pesan gambar WhatsApp melalui self-hosted wa-gateway (Baileys)
+     * disertai caption, dengan timeout lebih panjang untuk upload media.
+     */
     protected function sendImageViaGateway(string $target, string $imageUrl, string $caption): bool
     {
         try {
@@ -217,6 +225,11 @@ class WhatsAppService
 
     // ── Fonnte Provider ───────────────────────────────────────────────
 
+    /**
+     * Mengirim pesan WhatsApp melalui cloud API Fonnte.
+     * Mendukung teks biasa dan lampiran gambar via parameter $url.
+     * Melakukan normalisasi nomor ke format internasional.
+     */
     protected function sendViaFonnte(string $target, string $message, string $url = ''): bool
     {
         try {

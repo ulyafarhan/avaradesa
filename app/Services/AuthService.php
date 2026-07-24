@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Service autentikasi yang menangani login warga (NIK + No KK), login admin,
+ * registrasi dan login PIN 6-digit, serta registrasi dan login biometrik.
+ */
 class AuthService
 {
     /**

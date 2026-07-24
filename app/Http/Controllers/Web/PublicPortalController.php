@@ -15,8 +15,16 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Controller untuk halaman portal publik bagi pengunjung (guest).
+ * Menangani rendering halaman beranda, profil desa, informasi publik,
+ * verifikasi dokumen, statistik, fasilitas, dan aspirasi.
+ */
 class PublicPortalController extends Controller
 {
+    /**
+     * Menampilkan halaman beranda dengan data demografi, layanan, berita terbaru, dan kategori surat.
+     */
     public function home(StatistikService $statistik): Response
     {
         return Inertia::render('Public/Home', [
@@ -36,6 +44,9 @@ class PublicPortalController extends Controller
         ]);
     }
 
+    /**
+     * Menampilkan halaman profil perangkat desa (Kepala Desa, Sekretaris, Operator).
+     */
     public function profile(): Response
     {
         $getFotoUrl = function ($kunci, $fallbackKey = null) {
@@ -73,6 +84,9 @@ class PublicPortalController extends Controller
         ]);
     }
 
+    /**
+     * Menampilkan daftar informasi publik dengan filter kategori dan pencarian.
+     */
     public function information(): Response
     {
         $query = InformasiPublik::query()
@@ -104,6 +118,9 @@ $query->when(request("search"), function ($q, $search) {
         ]);
     }
 
+    /**
+     * Menampilkan detail informasi publik berdasarkan slug.
+     */
     public function informationShow(string $slug): Response
     {
         return Inertia::render("Public/Information/Show", [
@@ -115,6 +132,9 @@ $query->when(request("search"), function ($q, $search) {
         ]);
     }
 
+    /**
+     * Menampilkan halaman verifikasi dokumen (form input hash/kode QR).
+     */
     public function verifyIndex(): Response
     {
         return Inertia::render("Public/Verify", [
@@ -122,7 +142,10 @@ $query->when(request("search"), function ($q, $search) {
         ]);
     }
 
-public function verify(string $hash): Response
+    /**
+     * Memverifikasi dokumen surat berdasarkan QR hash dan menampilkan hasilnya.
+     */
+    public function verify(string $hash): Response
     {
         $pengajuan = PengajuanSurat::query()
             ->with(["kategori:id,nama_surat", "pemohon:nik,nama_lengkap", "verifikator:id,username"])
@@ -148,6 +171,9 @@ public function verify(string $hash): Response
         ]);
     }
 
+    /**
+     * Menampilkan halaman statistik demografi dan layanan desa.
+     */
     public function statistik(StatistikService $statistik): Response
     {
         return Inertia::render("Public/Statistik", [
@@ -156,6 +182,9 @@ public function verify(string $hash): Response
         ]);
     }
 
+    /**
+     * Menampilkan daftar fasilitas desa yang bersifat publik.
+     */
     public function fasilitas(): Response
     {
         $fasilitas = InventarisFasilitas::query()
@@ -183,6 +212,9 @@ public function verify(string $hash): Response
         ]);
     }
 
+    /**
+     * Menampilkan detail fasilitas desa beserta daftar fasilitas terbaru lainnya.
+     */
     public function fasilitasShow(InventarisFasilitas $fasilitas): Response
     {
         $fasilitasTerbaru = InventarisFasilitas::query()
@@ -225,6 +257,9 @@ public function verify(string $hash): Response
         ]);
     }
 
+    /**
+     * Menyimpan aspirasi/pesan dari publik dan mencatatnya ke log sistem.
+     */
     public function storeAspirasi(Request $request): RedirectResponse
     {
 $request->validate([

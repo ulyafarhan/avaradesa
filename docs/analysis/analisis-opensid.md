@@ -21,7 +21,7 @@
 | **Testing** | PHPUnit 9 (50-100 tests) | PHPUnit 12 + Vitest + Capacitor/Electron Test (580+ assertions) | **AvaraDesa** — 5x lebih banyak |
 | **CI/CD** | ❌ Tidak ada | ✅ GitHub Actions (3 job paralel) | **AvaraDesa** |
 | **Docker** | ❌ Tidak ada | ✅ Docker + docker-compose | **AvaraDesa** |
-| **Lisensi** | GPL-3.0 (restriktif) | MIT (bebas) | **AvaraDesa** — lebih fleksibel |
+| **Lisensi** | GPL-3.0 (restriktif) | AGPL v3 (copyleft - terbuka jika didistribusikan) | **AvaraDesa** — keseimbangan open source & komersial |
 
 ### 1.2 Fitur yang Ada di OpenSID tapi Tidak di AvaraDesa
 

@@ -11,12 +11,20 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
+/**
+ * Controller API untuk layanan chatbot berbasis AI.
+ * Menangani percakapan dengan pengguna melalui endpoint REST.
+ */
 class ChatbotController extends Controller
 {
     public function __construct(
         protected FallbackAiService $aiService,
     ) {}
 
+    /**
+     * Menangani pesan chat dari pengguna, memprosesnya dengan AI service,
+     * dan mengembalikan respons beserta session_id.
+     */
     public function chat(Request $request): JsonResponse
     {
         $request->validate([

@@ -16,7 +16,8 @@ use Laravel\Ai\Facades\Ai;
 class FallbackAiService implements AiProviderInterface
 {
     /**
-     * Mengeksekusi aksi AI menggunakan daftar provider yang diurutkan berdasarkan prioritas.
+     * Menjalankan callback melalui daftar provider AI berdasarkan prioritas
+     * dengan mekanisme fallback otomatis jika provider gagal merespons.
      */
     protected function runWithFallback(callable $callback)
     {
@@ -86,7 +87,8 @@ class FallbackAiService implements AiProviderInterface
     }
 
     /**
-     * Menerapkan pengaturan konfigurasi ke konfigurasi runtime Laravel secara dinamis.
+     * Menerapkan konfigurasi provider AI (api_key, model, base_url) ke runtime Laravel
+     * secara dinamis, termasuk kompatibilitas mundur untuk OpenAI dan Gemini.
      */
     protected function applyProviderConfig(array $prov): void
     {
@@ -116,7 +118,8 @@ class FallbackAiService implements AiProviderInterface
     }
 
     /**
-     * Mengembalikan instance anonymous class yang mendelegasikan perintah ke Laravel AI SDK.
+     * Meresolusi dan menginstansiasi adapter provider AI berdasarkan tipe yang diberikan,
+     * membungkusnya dalam anonymous class yang mendelegasikan perintah ke Laravel AI SDK.
      */
     protected function resolveProviderInstance(string $type): AiProviderInterface
     {
@@ -327,6 +330,10 @@ class FallbackAiService implements AiProviderInterface
         return null;
     }
 
+    /**
+     * Menghitung token dengan memecah teks menjadi kata-kata,
+     * membersihkan karakter non-alfanumerik, dan menghapus stopword Bahasa Indonesia.
+     */
     public function tokenize(string $text): array
     {
         $clean = preg_replace('/[^\w\s]/u', '', $text);

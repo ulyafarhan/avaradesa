@@ -19,10 +19,7 @@ apps/android/app/build/
 apps/ios/Pods/
 apps/ios/build/
 apps/.capacitor/
-
-# Capacitor generated platforms (commit only capacitor.config.ts, not platform folders)
-# apps/android/
-# apps/ios/
+apps/release/
 
 # Electron
 apps/electron/dist/
@@ -40,17 +37,31 @@ apps/out/
 *.swp
 /storage/framework/views/*
 
-# IDE & Agent
+# IDE
 .vscode/
+.fleet/
+
+# OpenCode AI config
 .opencode/
-opencode.json
-.agents/
-AGENTS.md
 .opencodeignore
-.codebase-memory/
-docs/superpowers/
-docs/doc-review-report.md
-designpanel.md
+.ignore
+.agents/
+
+# Scribe generated API docs (regenerate via php artisan scribe:generate)
+/public/vendor/scribe/
+
+# Auto-generated Laravel IDE helpers
+_ide_helper_*.php
+.phpstorm.meta.php
+
+# Lomba CODE 6.0
+proposal-html.html
+proposal.docx
+generate_proposal.py
+repo.txt
+link.txt
+RuleBook*.md
+Template Proposal*.md
 
 # Temporary
 *.zip
@@ -61,9 +72,20 @@ public/global_refactor.php
 public/delete_old_migration.php
 fix_factories.php
 check_errors.php
+check_pdf.py
+clean_md.py
 rag_setup.py
+_*.py
+__*/
+_akademik_output/
 
-# Other
-docs/audit-lengkap-*.md
+# OS thumbnails
+Thumbs.db
+Desktop.ini
+
+# Codebase memory cache (auto-regenerated)
+.codebase-memory/
+docs/superpowers/
 docs/doc-review-report.md
-.ignore
+docs/audit-lengkap-*.md
+designpanel.md
