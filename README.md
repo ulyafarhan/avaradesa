@@ -2,6 +2,28 @@
 
 Sistem Informasi Desa Terpadu berbasis Laravel + Filament + Vue 3. Multi-platform (web, mobile, desktop).
 
+**Akses Cepat:**
+- Website: [https://avaradesa.my.id](https://avaradesa.my.id)
+- Admin Panel: [https://avaradesa.my.id/admin](https://avaradesa.my.id/admin)
+- Dokumentasi API: [https://avaradesa.my.id/docs](https://avaradesa.my.id/docs)
+
+### Demo Account
+
+| Role | Username | Password |
+|:-----|:---------|:---------|
+| Kepala Desa | `kepala desa` | `kepaladesa789` |
+| Sekretaris Desa | `sekdes` | `sekdes456` |
+| Operator | `operator` | `operator123` |
+
+**Akun Warga Demo:**
+- NIK: `1118060512900001` — No. KK: `1118060001000001`
+- Nama: Muhammad Rizal — Password: `password`
+- Login di [https://avaradesa.my.id/login](https://avaradesa.my.id/login)
+
+> **Peringatan:** Ubah password segera setelah login pertama. Password ini hanya untuk pengembangan/testing.
+
+---
+
 - [1. Pendahuluan](#1-pendahuluan)
 - [2. Spesifikasi Teknis](#2-spesifikasi-teknis)
 - [3. Arsitektur Sistem](#3-arsitektur-sistem)
@@ -246,24 +268,6 @@ php artisan queue:work  # opsional
 ```
 
 Aplikasi dapat diakses di `http://localhost:8000`.
-
-**Kredensial Default:**
-| Role | Username | Password |
-|:-----|:---------|:---------|
-| Kepala Desa | `kepala desa` | `kepaladesa789` |
-| Sekretaris Desa | `sekdes` | `sekdes456` |
-| Operator | `operator` | `operator123` |
-| Demo (full access) | `admin` | `password` |
-
-**Akun Warga Demo:**
-| | Value |
-|:----|:------|
-| NIK | `1118060512900001` |
-| No. KK | `1118060001000001` |
-| Nama | Muhammad Rizal |
-| Password | `password` (untuk login PIN/biometrik) |
-
-> **⚠️ Peringatan:** Ubah password segera setelah instalasi! Password hanya untuk pengembangan/testing.
 
 ### 4.3 Migrasi Activity Log (jika upgrade dari versi lama)
 
