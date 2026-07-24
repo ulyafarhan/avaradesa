@@ -75,7 +75,7 @@ class AdminLogin extends Login
      */
     public function authenticate(): ?LoginResponse
     {
-        $username = $this->getFormState()['username'] ?? 'unknown';
+        $username = $this->data['username'] ?? 'unknown';
 
         try {
             $result = parent::authenticate();
