@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 
 /**
@@ -16,13 +18,14 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
  * @property  string  $kode_surat  Kode singkat jenis surat (misal: SKTM, DOMISILI)
  * @property  string  $nama_surat  Nama lengkap jenis surat
  * @property  string  $template_view  Nama file Blade view template surat
+ * @property  string|null  $body_content  Body surat dengan placeholder {nama_desa} dll
  * @property  array   $schema_isian  Skema field isian form (JSON)
  * @property  array   $syarat_dokumen  Daftar syarat dokumen pendukung (JSON)
  * @property  bool    $is_active  Status aktif/tidaknya layanan surat ini
  */
 class KategoriSurat extends Model
 {
-    use HasUlids;
+    use HasFactory, HasUlids, SoftDeletes;
 
     /**
      * Nama tabel database yang terhubung dengan model ini.
@@ -47,6 +50,7 @@ class KategoriSurat extends Model
         'kode_surat',
         'nama_surat',
         'template_view',
+        'body_content',
         'schema_isian',
         'syarat_dokumen',
         'is_active',

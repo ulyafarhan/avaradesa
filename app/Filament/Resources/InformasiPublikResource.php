@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\InformasiPublikResource\Pages;
 use App\Models\InformasiPublik;
+use App\Services\SystemLogger;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -39,7 +40,9 @@ class InformasiPublikResource extends Resource
 
     protected static ?string $navigationLabel = 'Informasi Publik';
 
-    protected static ?int $navigationSort = 4;
+    protected static string|\UnitEnum|null $navigationGroup = 'Informasi Desa';
+
+    protected static ?int $navigationSort = 5;
 
     /**
      * Menampilkan jumlah artikel yang sudah dipublikasikan sebagai badge navigasi.
@@ -318,6 +321,9 @@ class InformasiPublikResource extends Resource
                     ->mutateFormDataUsing(function (array $data): array {
                         if (!empty($data['cover_image_file'])) {
                             $data['cover_image'] = $data['cover_image_file'];
+                            SystemLogger::log('file.uploaded', 'Gambar cover informasi publik diunggah', null, [
+                                'file' => $data['cover_image_file'], 'judul' => $data['judul'] ?? '',
+                            ]);
                         } elseif (!empty($data['cover_image_url'])) {
                             $data['cover_image'] = $data['cover_image_url'];
                         } else {
@@ -332,6 +338,9 @@ class InformasiPublikResource extends Resource
                     ->mutateFormDataUsing(function (array $data): array {
                         if (!empty($data['cover_image_file'])) {
                             $data['cover_image'] = $data['cover_image_file'];
+                            SystemLogger::log('file.uploaded', 'Gambar cover informasi publik diperbarui', null, [
+                                'file' => $data['cover_image_file'], 'judul' => $data['judul'] ?? '',
+                            ]);
                         } elseif (!empty($data['cover_image_url'])) {
                             $data['cover_image'] = $data['cover_image_url'];
                         } else {

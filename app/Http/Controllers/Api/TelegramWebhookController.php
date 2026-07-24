@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\ProcessTelegramMessageJob;
+use App\Services\SystemLogger;
 use App\Services\TelegramService;
 use App\Services\TelegramKnowledgeService;
 use Illuminate\Http\Request;
@@ -44,9 +45,36 @@ class TelegramWebhookController extends Controller
      */
     public function handle(Request $request)
     {
+        $secret = $request->header('X-Telegram-Bot-Api-Secret-Token');
+        $expected = config('services.telegram.webhook_secret');
+        
+        if (!$expected || !hash_equals($expected, (string) $secret)) {
+            Log::warning('Invalid Telegram webhook secret', [
+                'ip' => $request->ip(),
+                'provided' => $secret,
+            ]);
+            SystemLogger::log('webhook.received', 'Webhook Telegram ditolak (invalid secret)', null, [
+                'ip' => $request->ip(), 'result' => 'rejected',
+            ]);
+            abort(401, 'Invalid webhook secret');
+        }
+
+        $request->validate([
+            'message' => 'nullable|array',
+            'callback_query' => 'nullable|array',
+        ]);
+
         $update = $request->all();
         
-        Log::info('Telegram Webhook Received', $update);
+        Log::info('Telegram Webhook received', [
+            'chat_id' => $update['message']['chat']['id'] ?? $update['callback_query']['message']['chat']['id'] ?? 'unknown'
+        ]);
+
+        SystemLogger::log('webhook.received', 'Webhook Telegram diterima', null, [
+            'chat_id' => $update['message']['chat']['id'] ?? $update['callback_query']['message']['chat']['id'] ?? 'unknown',
+            'has_message' => isset($update['message']),
+            'has_callback' => isset($update['callback_query']),
+        ]);
 
         if (isset($update['message'])) {
             $this->handleMessage($update['message']);

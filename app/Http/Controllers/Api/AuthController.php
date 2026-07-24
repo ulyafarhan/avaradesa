@@ -3,12 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Administrator;
-use App\Models\AuditLog;
 use App\Models\Penduduk;
+use App\Services\AuthService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Controller untuk menangani API Autentikasi (warga & admin) berbasis Token.
@@ -17,6 +14,10 @@ use Illuminate\Validation\ValidationException;
  */
 class AuthController extends Controller
 {
+    public function __construct(
+        protected AuthService $authService
+    ) {}
+
     /**
      * Memproses login warga menggunakan NIK dan Nomor Kartu Keluarga.
      */
@@ -27,27 +28,9 @@ class AuthController extends Controller
             'no_kk' => 'required|string|size:16',
         ]);
 
-        $penduduk = Penduduk::where('nik', $request->nik)
-            ->where('no_kk', $request->no_kk)
-            ->first();
+        $data = $this->authService->loginWarga($request->nik, $request->no_kk);
 
-        if (! $penduduk || $penduduk->status_mutasi !== 'Tetap') {
-            throw ValidationException::withMessages([
-                'nik' => ['NIK, No KK, atau status warga tidak valid.'],
-            ]);
-        }
-
-        $token = $penduduk->createToken('warga-token', ['warga'])->plainTextToken;
-
-        AuditLog::log('warga', $penduduk->nik, 'login', 'penduduk', $penduduk->nik);
-
-        return response()->json([
-            'message' => 'Login berhasil',
-            'user' => $penduduk,
-            'token' => $token,
-            'has_pin' => !empty($penduduk->pin_hash),
-            'has_biometric' => !empty($penduduk->biometric_key),
-        ]);
+        return response()->json(array_merge(['message' => 'Login berhasil'], $data));
     }
 
     /**
@@ -60,23 +43,9 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $admin = Administrator::where('username', $request->username)->first();
+        $data = $this->authService->loginAdmin($request->username, $request->password, $request->ip());
 
-        if (! $admin || ! Hash::check($request->password, $admin->password)) {
-            throw ValidationException::withMessages([
-                'username' => ['Username atau password salah.'],
-            ]);
-        }
-
-        $token = $admin->createToken('admin-token', ['admin'])->plainTextToken;
-
-        AuditLog::log('admin', $admin->id, 'login', 'administrators', $admin->id);
-
-        return response()->json([
-            'message' => 'Login berhasil',
-            'user' => $admin,
-            'token' => $token,
-        ]);
+        return response()->json(array_merge(['message' => 'Login berhasil'], $data));
     }
 
     /**
@@ -104,8 +73,8 @@ class AuthController extends Controller
 
         return response()->json([
             'user' => $user,
-            'has_pin' => !empty($user->pin_hash),
-            'has_biometric' => !empty($user->biometric_key),
+            'has_pin' => $user instanceof \App\Models\Penduduk ? !empty($user->pin_hash) : null,
+            'has_biometric' => $user instanceof \App\Models\Penduduk ? !empty($user->biometric_key) : null,
         ]);
     }
 
@@ -130,7 +99,7 @@ class AuthController extends Controller
             'telegram_chat_id' => $request->telegram_chat_id,
         ]);
 
-        AuditLog::log('warga', $user->nik, 'bind_telegram', 'penduduk', $user->nik);
+        \App\Models\AuditLog::log('warga', $user->nik, 'bind_telegram', 'penduduk', $user->nik);
 
         return response()->json([
             'message' => 'Telegram berhasil terhubung',
@@ -143,29 +112,12 @@ class AuthController extends Controller
     public function registerPin(Request $request)
     {
         $request->validate([
-            'nik'   => 'required|string|size:16|exists:penduduk,nik',
+            'nik'   => 'required|string|size:16',
             'no_kk' => 'required|string|size:16',
             'pin'   => 'required|string|digits:6|confirmed',
         ]);
 
-        $penduduk = Penduduk::where('nik', $request->nik)
-            ->where('no_kk', $request->no_kk)
-            ->first();
-
-        if (! $penduduk) {
-            throw ValidationException::withMessages([
-                'nik' => ['NIK atau No. KK tidak cocok.'],
-            ]);
-        }
-
-        $hash = Hash::make($request->pin);
-        $penduduk->update([
-            'pin_hash' => $hash,
-            'pin_attempts' => 0,
-            'locked_until' => null,
-        ]);
-
-        AuditLog::log('warga', $penduduk->nik, 'register_pin', 'penduduk', $penduduk->nik);
+        $this->authService->registerPin($request->nik, $request->no_kk, $request->pin);
 
         return response()->json([
             'message' => 'PIN 6-digit berhasil didaftarkan! Anda sekarang dapat login menggunakan NIK + PIN.',
@@ -178,65 +130,13 @@ class AuthController extends Controller
     public function loginPin(Request $request)
     {
         $request->validate([
-            'nik' => 'required|string|size:16|exists:penduduk,nik',
+            'nik' => 'required|string|size:16',
             'pin' => 'required|string|digits:6',
         ]);
 
-        $penduduk = Penduduk::where('nik', $request->nik)->first();
+        $data = $this->authService->loginPin($request->nik, $request->pin);
 
-        if (! $penduduk || ! $penduduk->pin_hash) {
-            throw ValidationException::withMessages([
-                'pin' => ['PIN belum didaftarkan untuk NIK ini. Silakan daftar PIN terlebih dahulu.'],
-            ]);
-        }
-
-        // Cek status terkunci
-        if ($penduduk->locked_until && now()->lessThan($penduduk->locked_until)) {
-            $diff = now()->diffInMinutes($penduduk->locked_until) + 1;
-            throw ValidationException::withMessages([
-                'pin' => ["Akun terkunci karena salah PIN 5 kali. Coba lagi dalam {$diff} menit."],
-            ]);
-        }
-
-        // Cek verifikasi hash PIN
-        if (! Hash::check($request->pin, $penduduk->pin_hash)) {
-            $attempts = $penduduk->pin_attempts + 1;
-
-            if ($attempts >= 5) {
-                $penduduk->update([
-                    'pin_attempts' => 0,
-                    'locked_until' => now()->addMinutes(15),
-                ]);
-                throw ValidationException::withMessages([
-                    'pin' => ['PIN salah 5 kali. Akun Anda dikunci sementara selama 15 menit.'],
-                ]);
-            }
-
-            $penduduk->update(['pin_attempts' => $attempts]);
-            $remaining = 5 - $attempts;
-
-            throw ValidationException::withMessages([
-                'pin' => ["PIN salah. Kesempatan tersisa {$remaining} kali."],
-            ]);
-        }
-
-        // Reset percobaan jika sukses
-        $penduduk->update([
-            'pin_attempts' => 0,
-            'locked_until' => null,
-        ]);
-
-        $token = $penduduk->createToken('warga-token', ['warga'])->plainTextToken;
-
-        AuditLog::log('warga', $penduduk->nik, 'login_pin', 'penduduk', $penduduk->nik);
-
-        return response()->json([
-            'message' => 'Login PIN berhasil',
-            'user' => $penduduk,
-            'token' => $token,
-            'has_pin' => true,
-            'has_biometric' => !empty($penduduk->biometric_key),
-        ]);
+        return response()->json(array_merge(['message' => 'Login PIN berhasil'], $data));
     }
 
     /**
@@ -254,11 +154,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Hanya warga yang dapat mengaktifkan sidik jari'], 403);
         }
 
-        $user->update([
-            'biometric_key' => $request->biometric_key,
-        ]);
-
-        AuditLog::log('warga', $user->nik, 'register_biometric', 'penduduk', $user->nik);
+        $this->authService->registerBiometric($user, $request->biometric_key);
 
         return response()->json([
             'message' => 'Sidik jari berhasil dihubungkan dengan akun Anda',
@@ -271,29 +167,13 @@ class AuthController extends Controller
     public function loginBiometric(Request $request)
     {
         $request->validate([
-            'nik'           => 'required|string|size:16|exists:penduduk,nik',
+            'nik'           => 'required|string|size:16',
             'biometric_key' => 'required|string',
         ]);
 
-        $penduduk = Penduduk::where('nik', $request->nik)->first();
+        $data = $this->authService->loginBiometric($request->nik, $request->biometric_key);
 
-        if (! $penduduk || ! $penduduk->biometric_key || $penduduk->biometric_key !== $request->biometric_key) {
-            throw ValidationException::withMessages([
-                'biometric_key' => ['Verifikasi sidik jari gagal atau belum diaktifkan.'],
-            ]);
-        }
-
-        $token = $penduduk->createToken('warga-token', ['warga'])->plainTextToken;
-
-        AuditLog::log('warga', $penduduk->nik, 'login_biometric', 'penduduk', $penduduk->nik);
-
-        return response()->json([
-            'message' => 'Login Sidik Jari Berhasil',
-            'user'    => $penduduk,
-            'token'   => $token,
-            'has_pin' => !empty($penduduk->pin_hash),
-            'has_biometric' => true,
-        ]);
+        return response()->json(array_merge(['message' => 'Login Sidik Jari Berhasil'], $data));
     }
 
     /**
@@ -302,28 +182,12 @@ class AuthController extends Controller
     public function resetPin(Request $request)
     {
         $request->validate([
-            'nik'   => 'required|string|size:16|exists:penduduk,nik',
+            'nik'   => 'required|string|size:16',
             'no_kk' => 'required|string|size:16',
             'pin'   => 'required|string|digits:6|confirmed',
         ]);
 
-        $penduduk = Penduduk::where('nik', $request->nik)
-            ->where('no_kk', $request->no_kk)
-            ->first();
-
-        if (! $penduduk) {
-            throw ValidationException::withMessages([
-                'nik' => ['NIK atau Nomor KK tidak cocok.'],
-            ]);
-        }
-
-        $penduduk->update([
-            'pin_hash' => Hash::make($request->pin),
-            'pin_attempts' => 0,
-            'locked_until' => null,
-        ]);
-
-        AuditLog::log('warga', $penduduk->nik, 'reset_pin', 'penduduk', $penduduk->nik);
+        $this->authService->resetPin($request->nik, $request->no_kk, $request->pin);
 
         return response()->json([
             'message' => 'PIN berhasil di-reset',

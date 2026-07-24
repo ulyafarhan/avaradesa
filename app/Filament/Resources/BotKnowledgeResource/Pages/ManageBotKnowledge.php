@@ -6,10 +6,10 @@ use App\Filament\Resources\BotKnowledgeResource;
 use Filament\Resources\Pages\ManageRecords;
 
 /**
- * Halaman manajemen basis pengetahuan chatbot Telegram.
+ * Halaman manajemen basis pengetahuan chatbot.
  *
  * Menyediakan fitur CRUD penuh untuk data FAQ (jawaban instan) dan RAG KB (konteks AI)
- * yang digunakan oleh bot Telegram. Data ini menjadi sumber referensi otomatis bagi
+ * yang digunakan oleh bot Telegram & WhatsApp. Data ini menjadi sumber referensi otomatis bagi
  * chatbot dalam merespon pertanyaan warga.
  *
  * @see \App\Filament\Resources\BotKnowledgeResource

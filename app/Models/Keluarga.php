@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -20,6 +21,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Keluarga extends Model
 {
+    use HasFactory;
+
     /**
      * Nama tabel database yang terhubung dengan model ini.
      *
@@ -47,13 +50,6 @@ class Keluarga extends Model
      * @var  string
      */
     protected $keyType = 'string';
-
-    /**
-     * Nonaktifkan timestamps otomatis.
-     *
-     * @var  bool
-     */
-    public $timestamps = false;
 
     /**
      * Atribut yang dapat diisi secara massal.

@@ -32,7 +32,7 @@ onMounted(async () => {
 
 async function submit() {
   if (!selectedKategori.value) { error.value = 'Kategori surat tidak ditemukan'; return }
-  const dataIsian = dynamicFormRef.value?.values ?? {}
+  const dataIsian = (dynamicFormRef.value as any)?.values ?? {}
   const required = (selectedKategori.value as any).schema_isian?.filter((f: any) => f.required) ?? []
   const missing = required.find((f: any) => !dataIsian[f.field])
   if (missing) { error.value = `"${missing.label}" wajib diisi`; return }

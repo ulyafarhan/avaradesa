@@ -5,6 +5,14 @@ import { api } from '../../../api/client'
 import { endpoints } from '../../../api/endpoints'
 import type { InformasiPublik } from '../../../api/types'
 
+const sanitizeHtml = (html: string): string => {
+  if (!html) return '';
+  return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+             .replace(/\bon\w+\s*=\s*"[^"]*"/gi, '')
+             .replace(/\bon\w+\s*=\s*'[^']*'/gi, '')
+             .replace(/javascript\s*:/gi, '');
+};
+
 const route   = useRoute()
 const router  = useRouter()
 const info    = ref<InformasiPublik | null>(null)
@@ -81,7 +89,7 @@ function formatDate(d: string): string {
         <div
           class="text-[14px] leading-relaxed space-y-3 article-content"
           style="color: var(--clr-text-secondary);"
-          v-html="info.konten"
+          v-html="sanitizeHtml(info.konten)"
         />
       </article>
     </div>

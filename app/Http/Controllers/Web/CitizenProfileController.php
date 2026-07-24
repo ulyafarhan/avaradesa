@@ -57,6 +57,7 @@ class CitizenProfileController extends Controller
             'pendidikan' => ['nullable', 'string', 'max:50'],
             'pekerjaan' => ['nullable', 'string', 'max:50'],
             'status_perkawinan' => ['nullable', 'string', 'max:20'],
+            'no_hp' => ['nullable', 'string', 'max:20'],
             'telegram_chat_id' => ['nullable', 'string', 'max:50'],
             'foto_profil' => ['nullable', 'image', 'max:2048'],
             'foto_ktp' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf,webp', 'max:2048'],

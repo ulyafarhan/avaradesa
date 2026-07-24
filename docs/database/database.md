@@ -13,7 +13,7 @@ Dokumentasi ini merinci skema tabel, relasi, normalisasi data, serta indeks opti
 
 ## 2. Struktur Relasi Tabel Utama (ERD)
 
-Sistem ini didukung oleh **25+ tabel inti** yang dinormalisasi hingga 3NF, terdiri dari tabel transaksional, tabel referensi (lookup), dan tabel konfigurasi:
+Sistem ini didukung oleh **27+ tabel inti** yang dinormalisasi hingga 3NF, terdiri dari tabel transaksional, tabel referensi (lookup), dan tabel konfigurasi:
 
 ```mermaid
 erDiagram
@@ -36,6 +36,19 @@ erDiagram
     informasi_publik }o--|| kategori_informasi : "dikategorikan (N:1)"
     inventaris_fasilitas }o--|| ref_jenis_fasilitas : "berjenis (N:1)"
     bot_knowledges ||--o{ knowledge_keywords : "mempunyai (1:N)"
+
+    activity_log {
+        bigint id PK
+        string log_name
+        text description
+        string subject_type
+        string subject_id
+        string causer_type
+        string causer_id
+        json properties
+        timestamp created_at
+        timestamp updated_at
+    }
 
     keluarga {
         string no_kk PK
@@ -61,6 +74,30 @@ erDiagram
         string no_hp
         string biometric_key
         string pin_hash
+        int pin_attempts
+        timestamp locked_until
+    }
+    agent_conversations {
+        string id PK
+        bigint user_id FK
+        string title
+        timestamp created_at
+        timestamp updated_at
+    }
+    agent_conversation_messages {
+        string id PK
+        string conversation_id FK
+        bigint user_id FK
+        string agent
+        string role
+        text content
+        text attachments
+        text tool_calls
+        text tool_results
+        text usage
+        text meta
+        timestamp created_at
+        timestamp updated_at
     }
     kategori_surat {
         ulid id PK
@@ -150,6 +187,7 @@ erDiagram
         json data_baru
         string ip_address
         text user_agent
+        timestamp created_at
     }
     pengaturan_frontend {
         string kunci PK
@@ -230,16 +268,21 @@ erDiagram
 * **`mutasi_penduduk`**: Mencatat riwayat perubahan demografi kependudukan — kelahiran, kematian, kedatangan, dan kepindahan. Setiap mutasi memiliki status verifikasi (Pending/Disetujui/Ditolak) dan dapat diverifikasi oleh administrator.
 * **`tracking_pengajuan_surat`**: Log perubahan status pengajuan surat secara kronologis. Mencatat status sebelumnya, status baru, dan admin yang melakukan perubahan.
 * **`chatbot_logs`**: Mencatat seluruh percakapan warga dengan Asisten Virtual Desa melalui Telegram — pesan masuk, balasan AI, dan jumlah token yang digunakan.
-* **`audit_logs`**: Mencatat semua aktivitas CRUD (INSERT, UPDATE, DELETE) di sistem lengkap dengan data lama, data baru, IP address, dan user agent aktor.
+* **`audit_logs`**: Mencatat semua aktivitas CRUD dan aspirasi warga di sistem (legacy, bertahap migrasi ke `activity_log`). Kolom `user_type` adalah string (`admin` / `warga`), bukan enum.
+* **`activity_log`**: Tabel audit utama dari spatie/laravel-activitylog. Menyimpan log aktivitas sistem dengan relasi morphs ke subject dan causer. Properties JSON menyimpan IP address, user agent, dan diff data.
 * **`traffic_logs`**: Mencatat kunjungan ke halaman publik dan area warga untuk analisis lalu lintas dan statistik dashboard. Termasuk deteksi bot.
 * **`telegram_broadcast_queue`**: Antrean pesan broadcast Telegram yang dijadwalkan ke warga. Mendukung target kategori (all, dusun, RT) dan pelacakan status pengiriman.
 * **`knowledge_keywords`**: Kata kunci individual untuk pencocokan pertanyaan warga dengan basis pengetahuan bot. Relasi many-to-one ke `bot_knowledges`.
 
 ### Tabel Konfigurasi & Konten
-* **`bot_knowledges`**: Basis pengetahuan (FAQ & RAG context) untuk Telegram chatbot. Berisi pasangan pertanyaan-jawaban, konten referensi, dan kata kunci untuk pencocokan dinamis oleh AI.
-* **`pengaturan_desa`**: Konfigurasi global sistem desa dalam format key-value — identitas wilayah, visi misi, kredensial API AI, dan Cloud Storage.
+* **`bot_knowledges`**: Basis pengetahuan (FAQ & RAG context) untuk Telegram & WhatsApp chatbot. Berisi pasangan pertanyaan-jawaban, konten referensi, dan kata kunci untuk pencocokan dinamis oleh AI.
+* **`pengaturan_desa`**: Konfigurasi global sistem desa dalam format key-value — identitas wilayah, visi misi, kredensial API AI, Cloud Storage, kredensial WhatsApp (wa_provider, wa_gateway_url, wa_api_key, wa_fonnte_token), dan 12 template notifikasi (notif_telegram_*, notif_wa_*).
 * **`pengaturan_frontend`**: Konfigurasi konten publik yang dapat diedit secara dinamis — nama & foto aparat desa, kontak layanan warga, link media sosial resmi, alamat kantor, dan tahun anggaran.
 * **`inventaris_fasilitas`**: Data inventaris fasilitas desa — gedung, jalan, jembatan, drainase, dan aset desa lainnya. Dilengkapi koordinat geografis (latitude/longitude), status kondisi, dan status penggunaan.
+
+### Tabel AI Conversations (Laravel AI SDK)
+* **`agent_conversations`**: Sesi percakapan AI antara user dengan chatbot. Menyimpan judul dan relasi ke pesan.
+* **`agent_conversation_messages`**: Detail pesan dalam sesi percakapan AI — role (user/assistant), konten, tool calls, dan usage tokens.
 
 ### Tabel Referensi (Lookup)
 * **`ref_agama`**: Data master agama — Islam, Kristen, Katolik, Hindu, Buddha, Konghucu, Lainnya.
@@ -299,6 +342,7 @@ Untuk memastikan kecepatan eksekusi kueri di bawah 500ms, indeks database dibuat
 * `idx_inventaris_created_at` pada `inventaris_fasilitas(created_at)`
 * `idx_referensi_wilayah_parent_kode` pada `referensi_wilayah(parent_kode)`
 * `idx_audit_created_at` pada `audit_logs(created_at)`
+* `idx_activity_log_log_name` pada `activity_log(log_name)`
 * `idx_pengaturan_frontend_kunci` pada `pengaturan_frontend(kunci)`
 * `idx_knowledge_keywords_kata_kunci` pada `knowledge_keywords(kata_kunci)`
 
@@ -318,6 +362,8 @@ Untuk memastikan kecepatan eksekusi kueri di bawah 500ms, indeks database dibuat
 * `idx_mutasi_nik_created` pada `mutasi_penduduk(nik, created_at)`
 * `idx_inventaris_publik_jenis` pada `inventaris_fasilitas(is_publik, jenis_fasilitas)`
 * `idx_chatbot_telegram_created` pada `chatbot_logs(telegram_chat_id, created_at)`
+* `idx_activity_log_subject` pada `activity_log(subject_type, subject_id)`
+* `idx_activity_log_causer` pada `activity_log(causer_type, causer_id)`
 
 ### Unique Constraint
 * `penduduk_no_kk_nik_unique` pada `penduduk(no_kk, nik)` — menjamin tidak ada duplikasi NIK dalam satu KK

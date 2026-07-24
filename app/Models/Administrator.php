@@ -5,6 +5,7 @@ namespace App\Models;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -23,7 +24,7 @@ use Laravel\Sanctum\HasApiTokens;
  */
 class Administrator extends Authenticatable implements FilamentUser
 {
-    use HasApiTokens, Notifiable, HasUlids;
+    use HasFactory, HasApiTokens, Notifiable, HasUlids;
 
     /**
      * Atribut yang dapat diisi secara massal.
@@ -105,7 +106,7 @@ class Administrator extends Authenticatable implements FilamentUser
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        return in_array($this->role, ['kepala desa', 'sekdes', 'operator', 'admin', 'kepala_desa'], true);
+        return in_array($this->role, ['kepala_desa', 'sekdes', 'operator'], true);
     }
 
     /**

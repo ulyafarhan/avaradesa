@@ -28,11 +28,7 @@ const tabs = [
 
 const setActiveTab = (tabId) => {
     activeTab.value = tabId;
-    try {
-        const url = new URL(window.location.href);
-        url.searchParams.set('tab', tabId);
-        window.history.pushState({}, '', url.toString());
-    } catch (e) {}
+    router.get(window.location.pathname, { tab: tabId }, { preserveState: true, preserveScroll: true });
 };
 
 const syncTabWithUrl = () => {
@@ -122,10 +118,10 @@ const recentPengajuan = computed(() => (props.pengajuan?.data || []).slice(0, 3)
 </template>
 
 <style>
-
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
 
 .google-editorial {
-    font-family: inherit;
+    font-family: 'Instrument Sans', 'Google Sans', sans-serif;
     color: #202124;
     background-color: #F8F9FA;
 }
@@ -401,3 +397,5 @@ const recentPengajuan = computed(() => (props.pengajuan?.data || []).slice(0, 3)
     border-radius: 9999px;
 }
 </style>
+
+

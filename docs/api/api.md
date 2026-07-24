@@ -1,6 +1,6 @@
 # Dokumentasi API - AvaraDesa
 
-Dokumentasi ini merinci spesifikasi lengkap endpoint API (50+ endpoint), metode autentikasi, parameter request, serta contoh respons untuk platform AvaraDesa.
+Dokumentasi ini merinci spesifikasi lengkap endpoint API (60+ endpoint), metode autentikasi, parameter request, serta contoh respons untuk platform AvaraDesa.
 
 ---
 
@@ -1035,7 +1035,34 @@ AvaraDesa menggunakan **Laravel Sanctum** untuk pengelolaan sesi API:
 
 ---
 
-### 2.11. Modul Admin - Manajemen Penduduk
+### 2.11. Modul Gateway Sync (wa-gateway)
+
+#### `GET /v1/gateway/sync`
+- **Fungsi**: Endpoint yang dipanggil wa-gateway tiap 5 menit untuk sinkronisasi data — FAQ, Knowledge Base, Kategori Surat, dan Template Notifikasi.
+- **Auth**: `X-API-Key` header (diverifikasi oleh `VerifyGatewayApiKey` middleware)
+- **Throttle**: 30 kali per 1 menit
+- **Response (200)**:
+  ```json
+  {
+    "faq": [...],
+    "kategori_surat": [...],
+    "template_notifikasi": {...}
+  }
+  ```
+- **Contoh JS (axios)**:
+  ```javascript
+  const response = await axios.get('/v1/gateway/sync', {
+    headers: { 'X-API-Key': 'your-gateway-key' }
+  });
+  ```
+- **Contoh PHP (guzzle)**:
+  ```php
+  $response = Http::withHeaders(['X-API-Key' => $apiKey])->get('/v1/gateway/sync');
+  ```
+
+---
+
+### 2.12. Modul Admin - Manajemen Penduduk
 
 #### `GET /v1/admin/penduduk`
 - **Fungsi**: [Khusus Admin] Mengambil daftar seluruh data penduduk dengan pencarian dan filter.
@@ -1223,7 +1250,7 @@ AvaraDesa menggunakan **Laravel Sanctum** untuk pengelolaan sesi API:
 
 ---
 
-### 2.12. Modul Admin - Manajemen Keluarga
+### 2.13. Modul Admin - Manajemen Keluarga
 
 #### `GET /v1/admin/keluarga`
 - **Fungsi**: [Khusus Admin] Mengambil daftar seluruh Kartu Keluarga dengan pencarian.
@@ -1329,7 +1356,7 @@ AvaraDesa menggunakan **Laravel Sanctum** untuk pengelolaan sesi API:
 
 ---
 
-### 2.13. Modul Admin - Manajemen Kategori Surat
+### 2.14. Modul Admin - Manajemen Kategori Surat
 
 #### `GET /v1/admin/kategori-surat`
 - **Fungsi**: [Khusus Admin] Mengambil daftar seluruh kategori surat.
@@ -1447,7 +1474,7 @@ AvaraDesa menggunakan **Laravel Sanctum** untuk pengelolaan sesi API:
 
 ---
 
-### 2.14. Modul Admin - Manajemen Fasilitas & Inventaris
+### 2.15. Modul Admin - Manajemen Fasilitas & Inventaris
 
 #### `GET /v1/admin/fasilitas`
 - **Fungsi**: [Khusus Admin] Mengambil daftar inventaris fasilitas desa.
@@ -1545,7 +1572,9 @@ AvaraDesa menggunakan **Laravel Sanctum** untuk pengelolaan sesi API:
 
 ---
 
-### 2.15. Modul Admin - Audit Log
+### 2.16. Modul Admin - Audit Log
+
+Audit logging menggunakan **dua tabel**: `audit_logs` (legacy) dan `activity_log` (spatie/laravel-activitylog, utama).
 
 #### `GET /v1/admin/audit-log`
 - **Fungsi**: [Khusus Admin] Mengambil log aktivitas sistem secara kronologis.
@@ -1557,11 +1586,11 @@ AvaraDesa menggunakan **Laravel Sanctum** untuk pengelolaan sesi API:
     "data": [
       {
         "id": 1,
-        "actor_type": "admin",
-        "actor_id": "1",
-        "action": "approve",
-        "target_type": "pengajuan_surat",
-        "target_id": "1",
+        "user_type": "admin",
+        "user_id": "1",
+        "tindakan": "approve",
+        "nama_tabel": "pengajuan_surat",
+        "record_id": "1",
         "created_at": "2026-07-14T09:00:00Z"
       }
     ],
@@ -1581,7 +1610,7 @@ AvaraDesa menggunakan **Laravel Sanctum** untuk pengelolaan sesi API:
 
 ---
 
-### 2.16. Modul Admin - Manajemen Informasi (Berita)
+### 2.17. Modul Admin - Manajemen Informasi (Berita)
 
 #### `GET /v1/admin/informasi`
 - **Fungsi**: [Khusus Admin] Mengambil semua draf maupun berita terbit.
@@ -1734,7 +1763,7 @@ AvaraDesa menggunakan **Laravel Sanctum** untuk pengelolaan sesi API:
 
 ---
 
-### 2.17. Modul Admin - Manajemen Surat
+### 2.18. Modul Admin - Manajemen Surat (Warga)
 
 #### `GET /v1/admin/surat/pengajuan`
 - **Fungsi**: [Khusus Admin] Mengambil daftar semua surat masuk yang menunggu verifikasi.
@@ -1837,7 +1866,7 @@ AvaraDesa menggunakan **Laravel Sanctum** untuk pengelolaan sesi API:
 
 ---
 
-### 2.18. Modul Admin - Manajemen Mutasi
+### 2.19. Modul Admin - Manajemen Mutasi
 
 #### `GET /v1/admin/mutasi`
 - **Fungsi**: [Khusus Admin] Mengambil daftar semua mutasi masuk yang menunggu verifikasi.
@@ -1922,7 +1951,7 @@ AvaraDesa menggunakan **Laravel Sanctum** untuk pengelolaan sesi API:
 
 ---
 
-### 2.19. Modul Admin - Statistik
+### 2.20. Modul Admin - Statistik
 
 #### `POST /v1/admin/statistik/clear-cache`
 - **Fungsi**: [Khusus Admin] Memaksa pembersihan cache statistik pada Redis.
@@ -1947,7 +1976,7 @@ AvaraDesa menggunakan **Laravel Sanctum** untuk pengelolaan sesi API:
 
 ---
 
-### 2.20. Format Respons Terstruktur
+### 2.21. Format Respons Terstruktur
 
 Seluruh endpoint API Resource menyertakan `*_formatted` fields untuk memudahkan rendering di sisi klien:
 
@@ -1958,7 +1987,57 @@ Seluruh endpoint API Resource menyertakan `*_formatted` fields untuk memudahkan 
 
 ---
 
+### 2.22. Modul Notifikasi (Admin Panel)
+
+#### `GET /admin/notifications`
+- **Fungsi**: [Khusus Admin] Halaman pengaturan notifikasi (rendered via Inertia).
+- **Auth**: Session (Filament admin)
+- **Response**: Render Inertia `Admin/NotificationSettings`
+
+#### `POST /admin/notifications/test`
+- **Fungsi**: [Khusus Admin] Kirim pesan test ke Telegram/WhatsApp.
+- **Auth**: Session (Filament admin)
+- **Body Parameter**:
+  | Parameter | Tipe | Required | Deskripsi |
+  |-----------|------|----------|-----------|
+  | `channel` | string | Ya | `telegram` atau `whatsapp` |
+  | `target` | string | Ya | Chat ID (Telegram) atau nomor HP (WhatsApp) |
+- **Response (200)**:
+  ```json
+  {
+    "success": true,
+    "message": "Pesan test berhasil dikirim"
+  }
+  ```
+
+#### `GET /api/v1/notifications/settings`
+- **Fungsi**: [Khusus Admin] Ambil semua pengaturan notifikasi sebagai JSON.
+- **Auth**: Bearer Token (Admin)
+- **Response (200)**:
+  ```json
+  {
+    "data": {
+      "telegram_bot_token": "***",
+      "telegram_webhook_url": "https://...",
+      "wa_provider": "wa-gateway",
+      "notif_wa_surat_pending": "Status Pengajuan Surat..."
+    }
+  }
+  ```
+
+#### `PUT /api/v1/notifications/settings`
+- **Fungsi**: [Khusus Admin] Update pengaturan notifikasi.
+- **Auth**: Bearer Token (Admin)
+- **Body Parameter**: Key-value pairs dari pengaturan notifikasi
+- **Response (200)**:
+  ```json
+  {
+    "message": "Pengaturan notifikasi berhasil diperbarui"
+  }
+  ```
+
+---
+
 ## 3. Integrasi & Pengujian API
 
-* **Koleksi Postman**: Tersedia di direktori `storage/app/private/scribe/collection.json` untuk diimpor langsung ke Postman Desktop.
 * **Spesifikasi OpenAPI**: File spesifikasi kontrak standar YAML berada di `docs/api-contract.yaml` (dapat diimpor ke Swagger Editor).

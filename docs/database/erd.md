@@ -203,6 +203,19 @@ erDiagram
         timestamp created_at
     }
 
+    activity_log {
+        bigint id PK
+        varchar_255 log_name
+        text description
+        varchar_255 subject_type
+        bigint subject_id
+        varchar_255 causer_type
+        bigint causer_id
+        json properties
+        timestamp created_at
+        timestamp updated_at
+    }
+
     pengaturan_frontend {
         varchar_50 kunci PK
         text nilai
@@ -511,11 +524,11 @@ Riwayat percakapan warga dengan Asisten Virtual Desa.
 * `created_at`: `TIMESTAMP DEFAULT CURRENT_TIMESTAMP`.
 
 ### 2.17. Tabel `audit_logs`
-Jejak audit seluruh aktivitas CRUD di sistem.
+Jejak audit seluruh aktivitas CRUD di sistem (legacy — bertahap migrasi ke `activity_log`).
 * `id`: `ULID PRIMARY KEY`.
-* `user_type`: `VARCHAR(20)` -> Jenis pelaku: `admin` atau `warga`.
+* `user_type`: `VARCHAR(20)` -> Jenis pelaku: `admin` atau `warga` (string, bukan enum setelah migrasi fix).
 * `user_id`: `VARCHAR(50) NULL` -> ID pelaku (ULID admin atau NIK warga).
-* `tindakan`: `VARCHAR(50)` -> Aksi: CREATE, UPDATE, DELETE.
+* `tindakan`: `VARCHAR(50)` -> Aksi: CREATE, UPDATE, DELETE, approve, reject, aspirasi.
 * `nama_tabel`: `VARCHAR(50)` -> Nama tabel yang dimodifikasi.
 * `record_id`: `VARCHAR(50) NULL` -> ID record yang dimodifikasi.
 * `data_lama`: `JSON NULL` -> Nilai sebelum perubahan.
@@ -524,7 +537,21 @@ Jejak audit seluruh aktivitas CRUD di sistem.
 * `user_agent`: `TEXT NULL` -> Informasi browser/klien.
 * `created_at`: `TIMESTAMP DEFAULT CURRENT_TIMESTAMP`.
 
-### 2.18. Tabel `inventaris_fasilitas`
+### 2.18. Tabel `activity_log`
+Tabel audit utama dari spatie/laravel-activitylog. Menyimpan log aktivitas sistem dengan relasi polymorphic.
+* `id`: `BIGINT PRIMARY KEY` (auto-increment).
+* `log_name`: `VARCHAR(255) NULL` -> Nama log (`system`).
+* `description`: `TEXT` -> Deskripsi kejadian.
+* `subject_type`: `VARCHAR(255) NULL` -> Model class target (polymorphic).
+* `subject_id`: `BIGINT NULL` -> ID target (polymorphic).
+* `causer_type`: `VARCHAR(255) NULL` -> Model class pelaku (`App\Models\Administrator`, `App\Models\Penduduk`).
+* `causer_id`: `BIGINT NULL` -> ID pelaku (polymorphic).
+* `properties`: `JSON NULL` -> Data tambahan: IP address, user agent, diff (data lama/baru), subject metadata.
+* `created_at`: `TIMESTAMP DEFAULT CURRENT_TIMESTAMP`.
+* `updated_at`: `TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`.
+* Index: `log_name`, `(subject_type, subject_id)`, `(causer_type, causer_id)`.
+
+### 2.19. Tabel `inventaris_fasilitas`
 Inventarisasi fasilitas dan aset desa.
 * `id`: `ULID PRIMARY KEY`.
 * `nama_fasilitas`: `VARCHAR(150)` -> Nama fasilitas.
@@ -541,7 +568,7 @@ Inventarisasi fasilitas dan aset desa.
 * `jenis_fasilitas_id`: `TINYINT UNSIGNED NULL FOREIGN KEY REFERENCES ref_jenis_fasilitas(id) ON DELETE SET NULL`.
 * `deleted_at`: `TIMESTAMP NULL` -> Soft delete.
 
-### 2.19. Tabel Referensi (Lookup)
+### 2.20. Tabel Referensi (Lookup)
 Tabel referensi menyimpan data master standar yang digunakan untuk normalisasi database:
 
 **`ref_agama`**: `id TINYINT UNSIGNED AUTO_INCREMENT PK`, `nama VARCHAR(20) UNIQUE`. Data: Islam, Kristen, Katolik, Hindu, Buddha, Konghucu, Lainnya.
@@ -581,6 +608,11 @@ Tabel referensi menyimpan data master standar yang digunakan untuk normalisasi d
 5. **Soft Deletes**:
    * Tabel `administrators`, `penduduk`, `kategori_surat`, `informasi_publik`, `bot_knowledges`, dan `inventaris_fasilitas` menggunakan soft delete (`deleted_at`) untuk mencegah kehilangan data historis.
 
-6. **Referensi Normalisasi**:
+6. **Activity Log (spatie/laravel-activitylog)**:
+   * Tabel `activity_log` menggunakan relasi polymorphic (`subject_type` + `subject_id`, `causer_type` + `causer_id`) — tidak ada foreign key constraint eksplisit.
+   * Data di `activity_log` tidak pernah dihapus oleh trigger cascade; pembersihan dilakukan oleh `system:cleanup` command (hapus data >90 hari).
+   * Migrasi dari `audit_logs` ke `activity_log` dilakukan via `log:migrate-from-audit` command.
+
+7. **Referensi Normalisasi**:
    * Tabel `penduduk` memiliki foreign key ke 5 tabel referensi (`ref_agama`, `ref_pendidikan`, `ref_pekerjaan`, `ref_status_perkawinan`, `ref_status_keluarga`) dengan `ON DELETE SET NULL` — data penduduk tetap tersimpan meskipun nilai referensi dihapus.
    * Kolom string legacy (`agama`, `pendidikan`, dll.) tetap dipertahankan untuk kompatibilitas mundur.

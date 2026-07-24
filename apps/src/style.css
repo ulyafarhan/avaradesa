@@ -424,3 +424,7 @@ input[type="search"]::-webkit-search-results-decoration {
 .ne-card-glass { background: var(--clr-surface); border: 1px solid var(--clr-border-light); }
 .ne-card-solid { background: var(--clr-surface); border: 1px solid var(--clr-border-light); }
 .ne-spring-press:active { transform: scale(0.97); }
+
+/* ponytail: hide scrollbar — all browsers */
+* { scrollbar-width: none !important; }
+*::-webkit-scrollbar, *::-webkit-scrollbar-track, *::-webkit-scrollbar-thumb { display: none !important; width: 0 !important; background: transparent !important; }

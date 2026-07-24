@@ -30,11 +30,11 @@ class RecentSubmissionsWidget extends BaseWidget
                     ->searchable()
                     ->copyable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('pemohon.nama')
+                Tables\Columns\TextColumn::make('pemohon.nama_lengkap')
                     ->label('Pemohon')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('kategori.nama')
+                Tables\Columns\TextColumn::make('kategori.nama_surat')
                     ->label('Jenis Surat')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
@@ -45,7 +45,7 @@ class RecentSubmissionsWidget extends BaseWidget
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'Pending' => 'warning',
-                        'Proses' => 'info',
+                        'Diproses' => 'info',
                         'Selesai' => 'success',
                         'Ditolak' => 'danger',
                         default => 'gray',

@@ -222,8 +222,8 @@ class PdfGeneratorService
                     'header' => "User-Agent: AvaraDesaApp/1.0 (http://avaradesa.test; admin@avaradesa.test) PHP/8.3\r\n"
                 ],
                 'ssl' => [
-                    'verify_peer' => false,
-                    'verify_peer_name' => false,
+                    'verify_peer' => true,
+                    'verify_peer_name' => true,
                 ]
             ];
             $context = stream_context_create($opts);
@@ -246,7 +246,7 @@ class PdfGeneratorService
     protected function generateNomorSurat(PengajuanSurat $pengajuan): string
     {
         $counter = PengajuanSurat::where('kategori_surat_id', $pengajuan->kategori_surat_id)
-            ->whereYear('created_at', date('Y'))
+            ->whereYear('created_at', now()->year)
             ->count();
 
         // Get dynamic village name and format it (e.g., "DESA SUKAMAKMUR" -> "DESA-SUKAMAKMUR")
@@ -259,7 +259,7 @@ class PdfGeneratorService
             $counter,
             $namaDesaFormatted,
             strtoupper(now()->locale('id')->monthName),
-            date('Y')
+            now()->year
         );
     }
 }

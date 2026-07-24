@@ -75,7 +75,7 @@ class WilayahPendudukSeeder extends Seeder
             'Nazar', 'Bakhtiar', 'Iskandar', 'Husni', 'Tarmizi',
             'Syarifuddin', 'Khairil', 'Diman', 'Mukhtar', 'Usman',
             'Saputra', 'Maulana', 'Putra', 'Rahman', 'Hasanah',
-            'Lubis', 'Harahap', 'Siregar', 'Simanjuntak', 'Sinaga',
+            'Al-Farisi', 'Al-Idrus', 'Al-Aydrus', 'Al-Kaf', 'Al-Habsyi',
         ];
 
         // 4. Pekerjaan
@@ -140,7 +140,7 @@ class WilayahPendudukSeeder extends Seeder
                 'no_kk' => $noKk,
                 'alamat' => $alamatLengkap,
                 'dusun' => $dusun,
-                'rt_rw' => $dusun,
+                'rt_rw' => sprintf('%03d/001', $faker->numberBetween(1, 6)),
             ]);
 
             // Status mutasi keluarga

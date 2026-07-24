@@ -68,11 +68,11 @@ class AdminPanelProvider extends PanelProvider
                 fn () => view('filament.login-credentials'),
             )
             ->navigationGroups([
-                NavigationGroup::make('Layanan')
+                NavigationGroup::make('Layanan Warga')
                     ->collapsible(),
                 NavigationGroup::make('Data Kependudukan')
                     ->collapsible(),
-                NavigationGroup::make('Konten')
+                NavigationGroup::make('Informasi Desa')
                     ->collapsible(),
                 NavigationGroup::make('Pengaturan')
                     ->collapsible()

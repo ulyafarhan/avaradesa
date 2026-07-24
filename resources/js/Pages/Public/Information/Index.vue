@@ -18,10 +18,7 @@ const props = defineProps({
 const activeKategori = ref(props.filters?.kategori || '');
 const searchQuery = ref(props.filters?.search || '');
 
-const stripHtml = (html) => {
-    if (!html) return '';
-    return html.replace(/<[^>]*>/g, '');
-};
+import { stripHtml } from '../../../Utils/string';
 
 const triggerFilter = () => {
     router.get('/informasi', {
@@ -53,44 +50,44 @@ const clearSearch = () => {
         <meta property="og:description" :content="'Temukan berita terbaru, pengumuman resmi di Desa ' + $page.props.settings.nama_desa" />
     </Head>
 
-    <header class="bg-white border-b border-gray-200 py-16">
+    <header class="bg-white pt-32 pb-24 border-b border-slate-200">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
-            <div class="max-w-3xl space-y-4">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#E8F0FE] text-[#1A73E8] uppercase tracking-wider">
-                    <Newspaper class="size-3.5" /> Publikasi Kabar & Pengumuman
+            <div class="max-w-4xl space-y-8">
+                <span class="block text-[10px] font-bold tracking-[0.3em] text-slate-500 uppercase mb-4 font-sans border-l-4 border-amber-600 pl-4">
+                    Publikasi Kabar & Pengumuman
                 </span>
                 
-                <h1 class="text-4xl sm:text-5xl font-normal text-[#202124] tracking-tight leading-tight">
-                    Pusat Informasi Desa
+                <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold text-slate-900 tracking-tight leading-[1.05] font-heading">
+                    Pusat Informasi<br/><span class="italic text-amber-600">Desa.</span>
                 </h1>
                 
-                <p class="text-base sm:text-lg text-[#5F6368] font-normal leading-relaxed">
+                <p class="text-xl text-slate-600 font-sans leading-relaxed max-w-2xl border-l-2 border-slate-200 pl-4">
                     Dapatkan berita terupdate, agenda kegiatan desa, serta pengumuman transparansi pembangunan secara langsung dan terbuka.
                 </p>
 
-                <div class="max-w-md pt-4">
-                    <form @submit.prevent="triggerFilter" class="flex items-center bg-[#F8F9FA] rounded-lg p-1.5 border border-gray-300 focus-within:border-[#1A73E8] focus-within:bg-white transition duration-200">
-                        <div class="pl-2.5 text-[#5F6368] shrink-0">
-                            <Search class="size-4" />
+                <div class="max-w-lg pt-8">
+                    <form @submit.prevent="triggerFilter" class="flex items-center bg-slate-50 rounded-xl p-2 border border-slate-200 focus-within:border-amber-600 shadow-sm transition-all duration-300">
+                        <div class="pl-3 text-slate-400 shrink-0">
+                            <Search class="size-5" />
                         </div>
                         <input 
                             type="text" 
                             v-model="searchQuery" 
                             placeholder="Cari berita..." 
-                            class="bg-transparent text-[#202124] text-sm grow px-2 py-2"
+                            class="bg-transparent text-slate-900 font-sans text-base grow px-4 py-2 placeholder:text-slate-400"
                             style="outline: none !important; box-shadow: none !important; border: none !important;"
                         />
                         <button 
                             v-if="searchQuery" 
                             type="button" 
                             @click="clearSearch"
-                            class="p-1.5 text-[#5F6368] hover:text-[#202124] shrink-0 rounded"
+                            class="p-2 text-slate-400 hover:text-slate-900 shrink-0 rounded-lg transition"
                         >
-                            <X class="size-4" />
+                            <X class="size-5" />
                         </button>
                         <AppButton 
                             type="submit" 
-                            class="rounded-md bg-[#1A73E8] hover:bg-[#155fa8] text-white font-medium px-4 py-2 text-xs transition shrink-0"
+                            class="rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3 text-[10px] tracking-[0.2em] uppercase transition shrink-0 ml-1 font-sans shadow-md"
                         >
                             Cari
                         </AppButton>
@@ -100,23 +97,23 @@ const clearSearch = () => {
         </div>
     </header>
 
-    <section class="mx-auto max-w-7xl px-6 py-12 lg:px-8 bg-[#F8F9FA] min-h-[500px]">
+    <section class="mx-auto max-w-7xl px-6 py-24 lg:px-8 bg-slate-50 min-h-[500px]">
         
-        <div class="space-y-3">
-            <span class="text-xs font-bold text-[#5F6368] uppercase tracking-wider block">Kategori Informasi:</span>
-            <div class="flex flex-wrap gap-2">
+        <div class="space-y-4">
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] block font-sans">Filter Kategori</span>
+            <div class="flex flex-wrap gap-3 font-sans">
                 <button
-                    class="rounded-full border px-4 py-1.5 text-xs font-semibold transition"
-                    :class="!activeKategori ? 'border-[#1A73E8] bg-[#E8F0FE] text-[#1A73E8]' : 'border-gray-300 bg-white text-[#5F6368] hover:border-gray-400'"
+                    class="rounded-full border px-5 py-2 text-[10px] font-bold tracking-widest uppercase transition-all duration-300"
+                    :class="!activeKategori ? 'border-amber-600 bg-amber-600 text-white shadow-md' : 'border-slate-300 bg-white text-slate-600 hover:border-slate-900 hover:text-slate-900'"
                     @click="filterByKategori('')"
                 >
-                    Semua Kabar
+                    Semua
                 </button>
                 <button
                     v-for="kat in kategori"
                     :key="kat"
-                    class="rounded-full border px-4 py-1.5 text-xs font-semibold transition"
-                    :class="activeKategori === kat ? 'border-[#1A73E8] bg-[#E8F0FE] text-[#1A73E8]' : 'border-gray-300 bg-white text-[#5F6368] hover:border-gray-400'"
+                    class="rounded-full border px-5 py-2 text-[10px] font-bold tracking-widest uppercase transition-all duration-300"
+                    :class="activeKategori === kat ? 'border-amber-600 bg-amber-600 text-white shadow-md' : 'border-slate-300 bg-white text-slate-600 hover:border-slate-900 hover:text-slate-900'"
                     @click="filterByKategori(kat)"
                 >
                     {{ kat }}
@@ -124,62 +121,56 @@ const clearSearch = () => {
             </div>
         </div>
 
-        <div v-if="informasi.data?.length" class="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        <div v-if="informasi.data?.length" class="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             <article 
                 v-for="item in informasi.data" 
                 :key="item.id" 
-                class="group bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg transition duration-200 flex flex-col justify-between"
+                class="group bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-2xl transition duration-500 flex flex-col justify-between"
             >
                 <div>
-                    <div class="relative h-48 w-full overflow-hidden bg-gradient-to-br from-teal-500/20 via-emerald-500/10 to-teal-600/20 flex items-center justify-center">
+                    <div class="relative h-64 w-full overflow-hidden bg-slate-100 flex items-center justify-center">
                         <img 
                             v-if="item.cover_image" 
                             :src="item.cover_image" 
                             :alt="item.judul"
-                            class="w-full h-full object-cover group-hover:scale-102 transition duration-500"
+                            class="w-full h-full object-cover group-hover:scale-105 transition duration-700"
                         />
-                        <div v-else class="flex flex-col items-center justify-center text-teal-800/60 p-4 text-center">
-                            <Newspaper class="size-10 mb-2 stroke-[1.5]" />
-                            <span class="text-xs font-semibold tracking-wide uppercase opacity-70">AvaraDesa Kabar</span>
+                        <div v-else class="flex flex-col items-center justify-center text-slate-400 p-4 text-center">
+                            <Newspaper class="size-12 mb-3 stroke-[1]" />
                         </div>
                         
-                        <div class="absolute bottom-3 left-3">
-                            <span class="text-[10px] font-bold tracking-wider text-teal-850 uppercase bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm">
+                        <div class="absolute bottom-4 left-4">
+                            <span class="text-[9px] font-bold tracking-[0.2em] text-white uppercase bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-lg shadow-sm font-sans">
                                 {{ item.kategori }}
                             </span>
                         </div>
                     </div>
 
-                    <div class="p-6 space-y-3">
-                        <div class="flex items-center gap-3 text-[10px] text-[#5F6368] font-bold">
-                            <span class="flex items-center gap-1">
-                                <Clock class="size-3" />
+                    <div class="p-8 space-y-4">
+                        <div class="flex items-center gap-3 text-[10px] text-slate-500 font-bold uppercase tracking-wider font-sans">
+                            <span class="flex items-center gap-1.5">
+                                <Clock class="size-3.5" />
                                 {{ new Date(item.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) }}
-                            </span>
-                            <span class="size-1 rounded-full bg-slate-300"></span>
-                            <span class="flex items-center gap-1">
-                                <User class="size-3" />
-                                {{ item.author?.username || 'Admin' }}
                             </span>
                         </div>
 
-                        <h2 class="text-base font-bold text-[#202124] leading-snug group-hover:text-[#1A73E8] transition duration-200 line-clamp-2">
+                        <h2 class="text-xl font-heading font-bold text-slate-900 leading-tight group-hover:text-amber-600 transition duration-300 line-clamp-2">
                             <a :href="`/informasi/${item.slug}`">{{ item.judul }}</a>
                         </h2>
 
-                        <p class="text-xs text-slate-700 line-clamp-3 leading-relaxed font-medium">
+                        <p class="text-sm text-slate-600 line-clamp-3 leading-relaxed font-sans">
                             {{ stripHtml(item.konten) }}
                         </p>
                     </div>
                 </div>
 
-                <div class="px-6 pb-6 pt-2">
+                <div class="px-8 pb-8 pt-2">
                     <AppButton 
                         :href="`/informasi/${item.slug}`" 
                         variant="ghost" 
-                        class="text-teal-700 font-bold px-0 flex items-center gap-1 text-xs hover:text-teal-850 hover:gap-2 transition-all duration-200"
+                        class="text-amber-600 font-bold px-0 flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] hover:text-amber-700 hover:gap-3 transition-all duration-300 font-sans"
                     >
-                        Baca Selengkapnya <span>→</span>
+                        Baca Selengkapnya <ArrowRight class="size-4" />
                     </AppButton>
                 </div>
             </article>
@@ -192,7 +183,7 @@ const clearSearch = () => {
             message="Kami tidak menemukan berita atau pengumuman dengan kata kunci / kategori pencarian tersebut." 
             :icon="Newspaper" 
         >
-            <AppButton @click="clearSearch" variant="outline" class="rounded-full">
+            <AppButton @click="clearSearch" variant="outline" class="rounded-full font-sans">
                 Reset Pencarian
             </AppButton>
         </EmptyState>

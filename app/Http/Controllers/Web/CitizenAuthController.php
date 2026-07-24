@@ -29,7 +29,9 @@ class CitizenAuthController extends Controller
      */
     public function create(): Response
     {
-        $testCredentials = Penduduk::where('nik', '1118060512900001')->first(['nik', 'no_kk']);
+        $testCredentials = app()->environment('local')
+            ? Penduduk::where('nik', '1118060512900001')->first(['nik', 'no_kk'])
+            : null;
 
         return Inertia::render('Auth/Login', [
             'testCredentials' => $testCredentials

@@ -1,6 +1,4 @@
 <script setup>
-import { computed } from 'vue';
-
 const props = defineProps({
     id: { type: String, required: true },
     label: { type: String, required: true },
@@ -14,29 +12,8 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue']);
 
 const handleInput = (event) => {
-    let rawValue = event.target.value;
-    
-    if (props.type === 'currency') {
-        rawValue = rawValue.replace(/\D/g, '');
-        if (rawValue) {
-            event.target.value = parseInt(rawValue, 10).toLocaleString('id-ID');
-        } else {
-            event.target.value = '';
-        }
-        emit('update:modelValue', rawValue);
-    } else {
-        emit('update:modelValue', rawValue);
-    }
+    emit('update:modelValue', event.target.value);
 };
-
-const displayValue = computed(() => {
-    if (props.type === 'currency') {
-        if (!props.modelValue && props.modelValue !== 0) return '';
-        const numeric = props.modelValue.toString().replace(/\D/g, '');
-        return numeric ? parseInt(numeric, 10).toLocaleString('id-ID') : '';
-    }
-    return props.modelValue;
-});
 </script>
 
 <template>
@@ -46,8 +23,8 @@ const displayValue = computed(() => {
         </span>
         <input
             :id="id"
-            :type="type === 'currency' ? 'text' : type"
-            :value="displayValue"
+            :type="type"
+            :value="modelValue"
             :placeholder="placeholder"
             :required="required"
             class="block w-full rounded-md border border-slate-200 bg-white px-3 py-2.5 text-base text-slate-800 placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500"

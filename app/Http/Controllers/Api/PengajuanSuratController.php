@@ -8,7 +8,9 @@ use App\Models\KategoriSurat;
 use App\Models\TrackingPengajuanSurat;
 use App\Models\AuditLog;
 use App\Jobs\GenerateSuratPdfJob;
+use App\Services\PengajuanSuratService;
 use App\Services\TelegramService;
+use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 
 /**
@@ -22,7 +24,9 @@ class PengajuanSuratController extends Controller
      * Menginjeksi dependensi TelegramService.
      */
     public function __construct(
-        protected TelegramService $telegram
+        protected TelegramService $telegram,
+        protected WhatsAppService $whatsapp,
+        protected PengajuanSuratService $pengajuanService
     ) {}
 
     /**
@@ -131,23 +135,38 @@ class PengajuanSuratController extends Controller
         $request->validate([
             'kategori_surat_id' => 'required|exists:kategori_surat,id',
             'data_isian' => 'required|array',
+            'data_isian.*' => 'required|string|max:1000',
             'file_syarat' => 'nullable|array',
             'file_syarat.*' => 'file|mimes:jpg,jpeg,png,pdf,webp|max:2048',
         ]);
 
         $user = $request->user();
-        
+        $kategori = KategoriSurat::findOrFail($request->kategori_surat_id);
+        $syaratLabels = $kategori->syarat_dokumen ?? [];
+
+        // ponytail: reuse biodata files by matching syarat_dokumen label → Penduduk field
+        $biodataMap = [
+            'ktp' => 'foto_ktp',
+            'kartu tanda penduduk' => 'foto_ktp',
+            'kk' => 'foto_kk',
+            'kartu keluarga' => 'foto_kk',
+            'pas foto' => 'foto_profil',
+        ];
+
         $uploadedPaths = [];
-        if ($request->hasFile('file_syarat')) {
-            foreach ($request->file('file_syarat') as $file) {
-                $uploadedPaths[] = $file->store('submissions/documents', 'public');
+        foreach ($request->file('file_syarat', []) as $i => $item) {
+            $label = strtolower($syaratLabels[$i] ?? '');
+            $reuseFrom = null;
+            foreach ($biodataMap as $key => $field) {
+                if (str_contains($label, $key)) { $reuseFrom = $field; break; }
             }
-        } elseif ($request->has('file_syarat') && is_array($request->file_syarat)) {
-            // Fallback for string paths
-            foreach ($request->file_syarat as $path) {
-                if (is_string($path)) {
-                    $uploadedPaths[] = $path;
-                }
+
+            if ($reuseFrom && $user->{$reuseFrom}) {
+                $uploadedPaths[] = $user->{$reuseFrom};
+            } elseif ($item instanceof \Illuminate\Http\UploadedFile) {
+                $uploadedPaths[] = $item->store('submissions/documents', 'public');
+            } else {
+                $uploadedPaths[] = $item;
             }
         }
 
@@ -165,9 +184,14 @@ class PengajuanSuratController extends Controller
             'keterangan_update' => 'Pengajuan surat dibuat',
         ]);
 
-        AuditLog::log('warga', $user->nik, 'create', 'pengajuan_surat', $pengajuan->id, null, $pengajuan->toArray());
+        AuditLog::log('warga', $user->nik, 'create', 'pengajuan_surat', $pengajuan->id, null, $pengajuan->only(['id', 'nomor_registrasi', 'status', 'kategori_surat_id']));
 
         $this->telegram->notifyPengajuanStatus(
+            $user->nik,
+            'Pending',
+            $pengajuan->nomor_registrasi
+        );
+        $this->whatsapp->notifyPengajuanStatus(
             $user->nik,
             'Pending',
             $pengajuan->nomor_registrasi
@@ -275,6 +299,7 @@ class PengajuanSuratController extends Controller
     public function show($id)
     {
         $pengajuan = PengajuanSurat::with(['kategori', 'pemohon', 'tracking.updater'])
+            ->where('nik_pemohon', auth()->user()->nik)
             ->findOrFail($id);
 
         $data = $pengajuan->toArray();
@@ -371,40 +396,13 @@ class PengajuanSuratController extends Controller
     public function approve(Request $request, $id)
     {
         $pengajuan = PengajuanSurat::findOrFail($id);
-        $admin = $request->user();
-
-        $oldStatus = $pengajuan->status;
+        $this->authorize('approve', $pengajuan);
         
-        $pengajuan->update([
-            'status' => 'Disetujui',
-            'diverifikasi_oleh' => $admin->id,
-        ]);
-
-        TrackingPengajuanSurat::create([
-            'pengajuan_surat_id' => $pengajuan->id,
-            'status_sebelumnya' => $oldStatus,
-            'status_baru' => 'Disetujui',
-            'keterangan_update' => 'Pengajuan disetujui oleh ' . $admin->username,
-            'diupdate_oleh' => $admin->id,
-        ]);
-
-        AuditLog::log('admin', $admin->id, 'approve', 'pengajuan_surat', $pengajuan->id);
-
-        if (app()->runningUnitTests()) {
-            GenerateSuratPdfJob::dispatch($pengajuan);
-        } else {
-            GenerateSuratPdfJob::dispatchSync($pengajuan);
-        }
-
-        $this->telegram->notifyPengajuanStatus(
-            $pengajuan->nik_pemohon,
-            'Disetujui',
-            $pengajuan->nomor_registrasi
-        );
+        $this->pengajuanService->approve($pengajuan, $request->user());
 
         return response()->json([
             'message' => 'Pengajuan berhasil disetujui',
-            'data' => $pengajuan,
+            'data' => $pengajuan->refresh(),
         ]);
     }
 
@@ -444,36 +442,13 @@ class PengajuanSuratController extends Controller
         ]);
 
         $pengajuan = PengajuanSurat::findOrFail($id);
-        $admin = $request->user();
-
-        $oldStatus = $pengajuan->status;
+        $this->authorize('reject', $pengajuan);
         
-        $pengajuan->update([
-            'status' => 'Ditolak',
-            'catatan_penolakan' => $request->catatan_penolakan,
-            'diverifikasi_oleh' => $admin->id,
-        ]);
-
-        TrackingPengajuanSurat::create([
-            'pengajuan_surat_id' => $pengajuan->id,
-            'status_sebelumnya' => $oldStatus,
-            'status_baru' => 'Ditolak',
-            'keterangan_update' => $request->catatan_penolakan,
-            'diupdate_oleh' => $admin->id,
-        ]);
-
-        AuditLog::log('admin', $admin->id, 'reject', 'pengajuan_surat', $pengajuan->id);
-
-        $this->telegram->notifyPengajuanStatus(
-            $pengajuan->nik_pemohon,
-            'Ditolak',
-            $pengajuan->nomor_registrasi,
-            $request->catatan_penolakan
-        );
+        $this->pengajuanService->reject($pengajuan, $request->user(), $request->catatan_penolakan);
 
         return response()->json([
             'message' => 'Pengajuan ditolak',
-            'data' => $pengajuan,
+            'data' => $pengajuan->refresh(),
         ]);
     }
 
@@ -482,24 +457,11 @@ class PengajuanSuratController extends Controller
      */
     public function downloadPdf($id)
     {
-        $pengajuan = PengajuanSurat::with(['kategori', 'pemohon'])->findOrFail($id);
+        $pengajuan = PengajuanSurat::with(['kategori', 'pemohon'])
+            ->where('nik_pemohon', auth()->user()->nik)
+            ->findOrFail($id);
 
-        $service = app(\App\Services\PdfGeneratorService::class);
-
-        if (!$pengajuan->file_pdf_url) {
-            $service->generateSuratPdf($pengajuan);
-            $pengajuan->refresh();
-        }
-
-        $filename = basename(parse_url($pengajuan->file_pdf_url, PHP_URL_PATH) ?? $pengajuan->file_pdf_url);
-        $relativePath = 'surat/' . $filename;
-
-        if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($relativePath)) {
-            $service->generateSuratPdf($pengajuan);
-            $pengajuan->refresh();
-            $filename = basename(parse_url($pengajuan->file_pdf_url, PHP_URL_PATH) ?? $pengajuan->file_pdf_url);
-            $relativePath = 'surat/' . $filename;
-        }
+        $relativePath = $this->pengajuanService->getPdfPath($pengajuan);
 
         return \Illuminate\Support\Facades\Storage::disk('public')->download(
             $relativePath,

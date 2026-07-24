@@ -80,38 +80,38 @@ const jenisSuratSorted = computed(() => {
         <meta property="og:description" :content="'Visualisasi data demografi kependudukan secara real-time di Desa ' + $page.props.settings.nama_desa" />
     </Head>
 
-    <header class="bg-white border-b border-gray-200 py-16">
+    <header class="bg-white pt-32 pb-24 border-b border-slate-200">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
-            <div class="max-w-3xl">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[#E8F0FE] text-[#1A73E8] uppercase tracking-wider mb-6">
-                    <Activity class="size-3.5" /> Data Kependudukan Terbuka
+            <div class="max-w-4xl space-y-8">
+                <span class="block text-[10px] font-bold tracking-[0.3em] text-slate-500 uppercase mb-4 font-sans border-l-4 border-amber-600 pl-4">
+                    Data Kependudukan Terbuka
                 </span>
                 
-                <h1 class="text-4xl sm:text-5xl font-normal text-[#202124] tracking-tight leading-tight mb-4">
-                    Statistik Desa {{ $page.props.settings.nama_desa }}
+                <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold text-slate-900 tracking-tight leading-[1.05] font-heading">
+                    Statistik Desa<br/><span class="italic text-amber-600">{{ $page.props.settings.nama_desa }}.</span>
                 </h1>
                 
-                <p class="text-base sm:text-lg text-[#5F6368] font-normal leading-relaxed">
+                <p class="text-xl text-slate-600 font-sans leading-relaxed max-w-2xl border-l-2 border-slate-200 pl-4">
                     Sajian informasi demografis, kepengurusan administrasi, dan mobilitas penduduk secara real-time. Transparansi data untuk pembangunan desa yang akuntabel.
                 </p>
             </div>
         </div>
     </header>
 
-    <div class="bg-white border-b border-gray-200 sticky top-[73px] z-20">
+    <div class="bg-white border-b border-slate-200 sticky top-[73px] z-20 shadow-sm backdrop-blur-xl bg-white/80">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
-            <div class="flex gap-8">
+            <div class="flex gap-12 font-sans">
                 <button 
                     @click="activeTab = 'demografi'"
-                    class="py-4 text-sm font-medium border-b-2 transition-all"
-                    :class="activeTab === 'demografi' ? 'border-[#1A73E8] text-[#1A73E8]' : 'border-transparent text-[#5F6368] hover:text-[#202124]'"
+                    class="py-6 text-sm font-bold uppercase tracking-widest border-b-2 transition-all duration-300"
+                    :class="activeTab === 'demografi' ? 'border-amber-600 text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-900'"
                 >
                     Profil Demografi
                 </button>
                 <button 
                     @click="activeTab = 'layanan'"
-                    class="py-4 text-sm font-medium border-b-2 transition-all"
-                    :class="activeTab === 'layanan' ? 'border-[#1A73E8] text-[#1A73E8]' : 'border-transparent text-[#5F6368] hover:text-[#202124]'"
+                    class="py-6 text-sm font-bold uppercase tracking-widest border-b-2 transition-all duration-300"
+                    :class="activeTab === 'layanan' ? 'border-amber-600 text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-900'"
                 >
                     Kinerja Layanan Surat
                 </button>
@@ -119,136 +119,136 @@ const jenisSuratSorted = computed(() => {
         </div>
     </div>
 
-    <main class="py-12 bg-[#F8F9FA] min-h-[500px]">
+    <main class="py-24 bg-slate-50 min-h-[500px]">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
             
-            <div v-if="activeTab === 'demografi'" class="space-y-12">
+            <div v-if="activeTab === 'demografi'" class="space-y-16">
                 
-                <div class="grid gap-6 md:grid-cols-3">
-                    <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between min-h-[160px]">
-                        <div>
-                            <span class="text-xs font-semibold text-[#5F6368] uppercase tracking-wider block mb-1">Total Warga Aktif</span>
-                            <span class="text-4xl font-normal text-[#202124]">{{ totalPenduduk.toLocaleString('id-ID') }}</span>
+                <div class="grid gap-8 md:grid-cols-3">
+                    <div class="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-xl flex flex-col justify-between min-h-[220px]">
+                        <div class="space-y-2">
+                            <span class="text-[10px] font-bold text-slate-500 font-sans uppercase tracking-widest block mb-4">Total Warga Aktif</span>
+                            <span class="text-6xl font-heading font-bold text-slate-900 tracking-tighter">{{ totalPenduduk.toLocaleString('id-ID') }}</span>
                         </div>
-                        <div class="text-xs text-[#5F6368] flex items-center gap-1.5 pt-4 border-t border-gray-100">
-                            <Users class="size-4 text-[#1A73E8]" />
+                        <div class="text-xs font-semibold text-slate-500 flex items-center gap-2 pt-6 border-t border-slate-200 font-sans">
+                            <Users class="size-4 text-amber-600" />
                             Terdaftar di sistem database desa
                         </div>
                     </div>
                     
-                    <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between min-h-[160px]">
-                        <div>
-                            <span class="text-xs font-semibold text-[#5F6368] uppercase tracking-wider block mb-1">Rasio Jenis Kelamin</span>
-                            <div class="flex gap-4 items-baseline mt-1">
-                                <span class="text-2xl font-normal text-[#202124]">{{ totalLakiLaki }} <span class="text-xs text-[#5F6368]">Laki-laki</span></span>
-                                <span class="text-2xl font-normal text-[#202124]">{{ totalPerempuan }} <span class="text-xs text-[#5F6368]">Perempuan</span></span>
+                    <div class="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-xl flex flex-col justify-between min-h-[220px]">
+                        <div class="space-y-2">
+                            <span class="text-[10px] font-bold text-slate-500 font-sans uppercase tracking-widest block mb-4">Rasio Jenis Kelamin</span>
+                            <div class="flex gap-6 items-baseline mt-2">
+                                <span class="text-4xl font-heading font-bold text-slate-900">{{ totalLakiLaki }} <span class="text-xs font-bold text-slate-500 font-sans uppercase tracking-widest">Laki</span></span>
+                                <span class="text-4xl font-heading font-bold text-slate-900">{{ totalPerempuan }} <span class="text-xs font-bold text-slate-500 font-sans uppercase tracking-widest">Pr</span></span>
                             </div>
                         </div>
-                        <div class="pt-4 border-t border-gray-100">
-                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden flex">
-                                <div class="bg-[#1A73E8] h-full" :style="{ width: formatPercent(totalLakiLaki, totalPenduduk) }" />
-                                <div class="bg-emerald-500 h-full" :style="{ width: formatPercent(totalPerempuan, totalPenduduk) }" />
+                        <div class="pt-6 border-t border-slate-200 mt-auto">
+                            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden flex">
+                                <div class="bg-slate-900 h-full" :style="{ width: formatPercent(totalLakiLaki, totalPenduduk) }" />
+                                <div class="bg-amber-600 h-full" :style="{ width: formatPercent(totalPerempuan, totalPenduduk) }" />
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between min-h-[160px]">
-                        <div>
-                            <span class="text-xs font-semibold text-[#5F6368] uppercase tracking-wider block mb-1">Total Kepala Keluarga</span>
-                            <span class="text-4xl font-normal text-[#202124]">{{ demografi?.total_keluarga ?? 0 }}</span>
+                    <div class="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-xl flex flex-col justify-between min-h-[220px]">
+                        <div class="space-y-2">
+                            <span class="text-[10px] font-bold text-slate-500 font-sans uppercase tracking-widest block mb-4">Total Kepala Keluarga</span>
+                            <span class="text-6xl font-heading font-bold text-slate-900 tracking-tighter">{{ demografi?.total_keluarga ?? 0 }}</span>
                         </div>
-                        <div class="text-xs text-[#5F6368] flex items-center gap-1.5 pt-4 border-t border-gray-100">
-                            <TrendingUp class="size-4 text-emerald-600" />
+                        <div class="text-xs font-semibold text-slate-500 flex items-center gap-2 pt-6 border-t border-slate-200 font-sans">
+                            <TrendingUp class="size-4 text-amber-600" />
                             Rata-rata 3-4 jiwa per keluarga
                         </div>
                     </div>
                 </div>
 
-                <div class="grid gap-8 lg:grid-cols-2">
-                    <section class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-                        <div class="mb-6 flex items-center justify-between">
-                            <h3 class="text-lg font-normal text-[#202124] flex items-center gap-2">
-                                <BarChart3 class="size-5 text-[#1A73E8]" /> Pekerjaan Warga
+                <div class="grid gap-12 lg:grid-cols-2">
+                    <section class="bg-white border border-slate-200 rounded-[2rem] p-10 shadow-xl">
+                        <div class="mb-10 flex items-center justify-between border-b border-slate-200 pb-6">
+                            <h3 class="text-2xl font-heading font-bold text-slate-900 flex items-center gap-3">
+                                <BarChart3 class="size-6 text-amber-600" /> Pekerjaan Warga
                             </h3>
-                            <span class="text-xs text-[#5F6368]">10 Besar Terbanyak</span>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest font-sans">10 Besar</span>
                         </div>
-                        <div class="space-y-4">
-                            <div v-for="job in pekerjaanSorted" :key="job.name" class="space-y-1">
-                                <div class="flex justify-between text-xs font-medium text-[#202124]">
+                        <div class="space-y-6">
+                            <div v-for="job in pekerjaanSorted" :key="job.name" class="space-y-2">
+                                <div class="flex justify-between text-xs font-bold text-slate-900 uppercase tracking-wider font-sans">
                                     <span>{{ job.name }}</span>
-                                    <span>{{ job.value }} jiwa ({{ formatPercent(job.value, totalPenduduk) }})</span>
+                                    <span class="text-amber-600">{{ job.value }} jiwa ({{ formatPercent(job.value, totalPenduduk) }})</span>
                                 </div>
-                                <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                                    <div class="bg-[#1A73E8] h-full rounded-full transition-all duration-500" :style="{ width: formatPercent(job.value, totalPenduduk) }" />
+                                <div class="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
+                                    <div class="bg-slate-900 h-full rounded-full transition-all duration-700" :style="{ width: formatPercent(job.value, totalPenduduk) }" />
                                 </div>
                             </div>
-                            <div v-if="!pekerjaanSorted.length" class="text-center py-8 text-xs text-[#5F6368]">
+                            <div v-if="!pekerjaanSorted.length" class="text-center py-8 text-xs font-bold text-slate-500 uppercase tracking-widest font-sans">
                                 Belum tersedia data pekerjaan
                             </div>
                         </div>
                     </section>
 
-                    <section class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-                        <div class="mb-6 flex items-center justify-between">
-                            <h3 class="text-lg font-normal text-[#202124] flex items-center gap-2">
-                                <PieChart class="size-5 text-[#1A73E8]" /> Distribusi Kelompok Usia
+                    <section class="bg-white border border-slate-200 rounded-[2rem] p-10 shadow-xl">
+                        <div class="mb-10 flex items-center justify-between border-b border-slate-200 pb-6">
+                            <h3 class="text-2xl font-heading font-bold text-slate-900 flex items-center gap-3">
+                                <PieChart class="size-6 text-amber-600" /> Kelompok Usia
                             </h3>
                         </div>
-                        <div class="space-y-4">
-                            <div v-for="age in usiaSorted" :key="age.name" class="space-y-1">
-                                <div class="flex justify-between text-xs font-medium text-[#202124]">
+                        <div class="space-y-6">
+                            <div v-for="age in usiaSorted" :key="age.name" class="space-y-2">
+                                <div class="flex justify-between text-xs font-bold text-slate-900 uppercase tracking-wider font-sans">
                                     <span>Usia {{ age.name }} tahun</span>
-                                    <span>{{ age.value }} jiwa ({{ formatPercent(age.value, totalPenduduk) }})</span>
+                                    <span class="text-amber-600">{{ age.value }} jiwa ({{ formatPercent(age.value, totalPenduduk) }})</span>
                                 </div>
-                                <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                                    <div class="bg-teal-600 h-full rounded-full transition-all duration-500" :style="{ width: formatPercent(age.value, totalPenduduk) }" />
+                                <div class="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
+                                    <div class="bg-amber-600 h-full rounded-full transition-all duration-700" :style="{ width: formatPercent(age.value, totalPenduduk) }" />
                                 </div>
                             </div>
-                            <div v-if="!usiaSorted.length" class="text-center py-8 text-xs text-[#5F6368]">
+                            <div v-if="!usiaSorted.length" class="text-center py-8 text-xs font-bold text-slate-500 uppercase tracking-widest font-sans">
                                 Belum tersedia data kelompok usia
                             </div>
                         </div>
                     </section>
 
-                    <section class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-                        <div class="mb-6">
-                            <h3 class="text-lg font-normal text-[#202124] flex items-center gap-2">
-                                <BarChart3 class="size-5 text-[#1A73E8]" /> Tingkat Pendidikan Warga
+                    <section class="bg-white border border-slate-200 rounded-[2rem] p-10 shadow-xl">
+                        <div class="mb-10 border-b border-slate-200 pb-6">
+                            <h3 class="text-2xl font-heading font-bold text-slate-900 flex items-center gap-3">
+                                <BarChart3 class="size-6 text-amber-600" /> Tingkat Pendidikan
                             </h3>
                         </div>
-                        <div class="space-y-4">
-                            <div v-for="edu in pendidikanSorted" :key="edu.name" class="space-y-1">
-                                <div class="flex justify-between text-xs font-medium text-[#202124]">
+                        <div class="space-y-6">
+                            <div v-for="edu in pendidikanSorted" :key="edu.name" class="space-y-2">
+                                <div class="flex justify-between text-xs font-bold text-slate-900 uppercase tracking-wider font-sans">
                                     <span>{{ edu.name }}</span>
-                                    <span>{{ edu.value }} jiwa ({{ formatPercent(edu.value, totalPenduduk) }})</span>
+                                    <span class="text-amber-600">{{ edu.value }} jiwa ({{ formatPercent(edu.value, totalPenduduk) }})</span>
                                 </div>
-                                <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                                    <div class="bg-[#1A73E8] h-full rounded-full transition-all duration-500" :style="{ width: formatPercent(edu.value, totalPenduduk) }" />
+                                <div class="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
+                                    <div class="bg-slate-900 h-full rounded-full transition-all duration-700" :style="{ width: formatPercent(edu.value, totalPenduduk) }" />
                                 </div>
                             </div>
-                            <div v-if="!pendidikanSorted.length" class="text-center py-8 text-xs text-[#5F6368]">
+                            <div v-if="!pendidikanSorted.length" class="text-center py-8 text-xs font-bold text-slate-500 uppercase tracking-widest font-sans">
                                 Belum tersedia data pendidikan
                             </div>
                         </div>
                     </section>
 
-                    <section class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-                        <div class="mb-6">
-                            <h3 class="text-lg font-normal text-[#202124] flex items-center gap-2">
-                                <PieChart class="size-5 text-[#1A73E8]" /> Keragaman Agama
+                    <section class="bg-white border border-slate-200 rounded-[2rem] p-10 shadow-xl">
+                        <div class="mb-10 border-b border-slate-200 pb-6">
+                            <h3 class="text-2xl font-heading font-bold text-slate-900 flex items-center gap-3">
+                                <PieChart class="size-6 text-amber-600" /> Keragaman Agama
                             </h3>
                         </div>
-                        <div class="space-y-4">
-                            <div v-for="rel in agamaSorted" :key="rel.name" class="space-y-1">
-                                <div class="flex justify-between text-xs font-medium text-[#202124]">
+                        <div class="space-y-6">
+                            <div v-for="rel in agamaSorted" :key="rel.name" class="space-y-2">
+                                <div class="flex justify-between text-xs font-bold text-slate-900 uppercase tracking-wider font-sans">
                                     <span>{{ rel.name }}</span>
-                                    <span>{{ rel.value }} jiwa ({{ formatPercent(rel.value, totalPenduduk) }})</span>
+                                    <span class="text-amber-600">{{ rel.value }} jiwa ({{ formatPercent(rel.value, totalPenduduk) }})</span>
                                 </div>
-                                <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                                    <div class="bg-teal-600 h-full rounded-full transition-all duration-500" :style="{ width: formatPercent(rel.value, totalPenduduk) }" />
+                                <div class="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
+                                    <div class="bg-amber-600 h-full rounded-full transition-all duration-700" :style="{ width: formatPercent(rel.value, totalPenduduk) }" />
                                 </div>
                             </div>
-                            <div v-if="!agamaSorted.length" class="text-center py-8 text-xs text-[#5F6368]">
+                            <div v-if="!agamaSorted.length" class="text-center py-8 text-xs font-bold text-slate-500 uppercase tracking-widest font-sans">
                                 Belum tersedia data keragaman agama
                             </div>
                         </div>
@@ -256,76 +256,77 @@ const jenisSuratSorted = computed(() => {
                 </div>
             </div>
 
-            <div v-else class="space-y-12">
-                <div class="grid gap-6 md:grid-cols-4">
-                    <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between min-h-[140px]">
-                        <div>
-                            <span class="text-xs font-semibold text-[#5F6368] uppercase tracking-wider block mb-1">Total Pengajuan</span>
-                            <span class="text-3xl font-normal text-[#202124]">{{ totalSurat }}</span>
+            <div v-else class="space-y-16">
+                <div class="grid gap-8 md:grid-cols-4">
+                    <div class="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-xl flex flex-col justify-between min-h-[180px]">
+                        <div class="space-y-2">
+                            <span class="text-[10px] font-bold text-slate-500 font-sans uppercase tracking-widest block mb-4">Total Pengajuan</span>
+                            <span class="text-5xl font-heading font-bold text-slate-900">{{ totalSurat }}</span>
                         </div>
-                        <div class="text-xs text-[#5F6368] pt-2">Sejak sistem diluncurkan</div>
+                        <div class="text-[10px] font-bold uppercase tracking-widest text-slate-500 pt-4 border-t border-slate-200 font-sans">Sejak sistem diluncurkan</div>
                     </div>
-                    <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between min-h-[140px]">
-                        <div>
-                            <span class="text-xs font-semibold text-[#5F6368] uppercase tracking-wider block mb-1">Selesai / Terbit</span>
-                            <span class="text-3xl font-normal text-emerald-600">{{ suratSelesai }}</span>
+                    <div class="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-xl flex flex-col justify-between min-h-[180px]">
+                        <div class="space-y-2">
+                            <span class="text-[10px] font-bold text-slate-500 font-sans uppercase tracking-widest block mb-4">Selesai / Terbit</span>
+                            <span class="text-5xl font-heading font-bold text-emerald-600">{{ suratSelesai }}</span>
                         </div>
-                        <div class="text-xs text-[#5F6368] pt-2">Tingkat penyelesaian: {{ formatPercent(suratSelesai, totalSurat) }}</div>
+                        <div class="text-[10px] font-bold uppercase tracking-widest text-slate-500 pt-4 border-t border-slate-200 font-sans">Penyelesaian: {{ formatPercent(suratSelesai, totalSurat) }}</div>
                     </div>
-                    <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between min-h-[140px]">
-                        <div>
-                            <span class="text-xs font-semibold text-[#5F6368] uppercase tracking-wider block mb-1">Sedang Antre</span>
-                            <span class="text-3xl font-normal text-[#1A73E8]">{{ suratPending }}</span>
+                    <div class="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-xl flex flex-col justify-between min-h-[180px]">
+                        <div class="space-y-2">
+                            <span class="text-[10px] font-bold text-slate-500 font-sans uppercase tracking-widest block mb-4">Sedang Antre</span>
+                            <span class="text-5xl font-heading font-bold text-amber-600">{{ suratPending }}</span>
                         </div>
-                        <div class="text-xs text-[#5F6368] pt-2">Butuh respon admin desa</div>
+                        <div class="text-[10px] font-bold uppercase tracking-widest text-slate-500 pt-4 border-t border-slate-200 font-sans">Butuh respon admin desa</div>
                     </div>
-                    <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between min-h-[140px]">
-                        <div>
-                            <span class="text-xs font-semibold text-[#5F6368] uppercase tracking-wider block mb-1">Berkas Ditolak</span>
-                            <span class="text-3xl font-normal text-red-600">{{ suratDitolak }}</span>
+                    <div class="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-xl flex flex-col justify-between min-h-[180px]">
+                        <div class="space-y-2">
+                            <span class="text-[10px] font-bold text-slate-500 font-sans uppercase tracking-widest block mb-4">Berkas Ditolak</span>
+                            <span class="text-5xl font-heading font-bold text-red-600">{{ suratDitolak }}</span>
                         </div>
-                        <div class="text-xs text-[#5F6368] pt-2">Syarat administrasi tidak lengkap</div>
+                        <div class="text-[10px] font-bold uppercase tracking-widest text-slate-500 pt-4 border-t border-slate-200 font-sans">Syarat tidak lengkap</div>
                     </div>
                 </div>
 
                 <div class="grid gap-8 lg:grid-cols-3">
-                    <section class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm lg:col-span-2">
-                        <div class="mb-6 flex items-center justify-between">
-                            <h3 class="text-base font-normal text-[#202124] flex items-center gap-2">
-                                <FileText class="size-5 text-[#1A73E8]" /> Pengajuan Berdasarkan Jenis Surat
+                    <section class="bg-white border border-slate-200 rounded-[2rem] p-10 shadow-xl lg:col-span-2">
+                        <div class="mb-8 border-b border-slate-200 pb-6">
+                            <h3 class="text-2xl font-heading font-bold text-slate-900 flex items-center gap-3">
+                                <FileText class="size-6 text-amber-600" /> Distribusi Jenis Surat
                             </h3>
                         </div>
-                        <div class="divide-y divide-gray-100">
-                            <div v-for="item in jenisSuratSorted" :key="item.name" class="py-3.5 flex justify-between items-center">
-                                <div class="flex items-center gap-3">
-                                    <span class="size-2 rounded-full bg-[#1A73E8]" />
-                                    <span class="text-xs font-semibold text-[#202124]">{{ item.name }}</span>
+                        <div class="divide-y divide-slate-100">
+                            <div v-for="item in jenisSuratSorted" :key="item.name" class="py-5 flex justify-between items-center group">
+                                <div class="flex items-center gap-4">
+                                    <span class="size-2 rounded-full bg-amber-600 shadow-sm transition-transform group-hover:scale-150 duration-300" />
+                                    <span class="text-sm font-bold text-slate-900 font-sans uppercase tracking-wider">{{ item.name }}</span>
                                 </div>
-                                <div class="flex items-center gap-4 text-xs">
-                                    <span class="font-normal text-[#202124]">{{ item.value }} pengajuan</span>
-                                    <span class="text-[#5F6368] bg-gray-100 px-2 py-0.5 rounded-md text-[10px]">{{ formatPercent(item.value, totalSurat) }}</span>
+                                <div class="flex items-center gap-6 font-sans">
+                                    <span class="text-slate-900 font-bold text-sm">{{ item.value }} pengajuan</span>
+                                    <span class="text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest">{{ formatPercent(item.value, totalSurat) }}</span>
                                 </div>
                             </div>
-                            <div v-if="!jenisSuratSorted.length" class="text-center py-8 text-xs text-[#5F6368]">
+                            <div v-if="!jenisSuratSorted.length" class="text-center py-12 text-[10px] font-bold text-slate-500 font-sans uppercase tracking-widest">
                                 Belum ada pengajuan surat yang masuk
                             </div>
                         </div>
                     </section>
 
-                    <section class="bg-[#E8F0FE] rounded-2xl p-8 flex flex-col justify-between border border-[#D2E3FC]">
-                        <div class="space-y-4">
-                            <div class="flex size-10 items-center justify-center rounded-full bg-white text-[#1A73E8]">
-                                <Info class="size-5" />
+                    <section class="bg-slate-950 text-white rounded-[2rem] p-10 flex flex-col justify-between border border-slate-800 shadow-2xl relative overflow-hidden">
+                        <div class="absolute -right-20 -top-20 w-64 h-64 bg-amber-500/10 rounded-full blur-[60px]"></div>
+                        <div class="space-y-6 relative z-10">
+                            <div class="flex size-14 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20">
+                                <Info class="size-6 text-white" />
                             </div>
-                            <h4 class="text-sm font-semibold text-[#202124]">Pengajuan Mandiri Warga</h4>
-                            <p class="text-xs text-[#5F6368] leading-relaxed">
+                            <h4 class="text-3xl font-heading font-bold leading-tight">Pengajuan<br/><span class="italic text-amber-500">Mandiri Warga.</span></h4>
+                            <p class="text-sm text-white/70 font-sans font-light leading-relaxed">
                                 Warga Desa {{ $page.props.settings.nama_desa }} dapat mengajukan seluruh jenis surat keterangan di atas secara mandiri online dengan masuk menggunakan NIK dan kata sandi yang terdaftar di kantor desa.
                             </p>
                         </div>
                         
-                        <div class="pt-6">
-                            <a href="/login" class="inline-flex items-center gap-1.5 text-xs text-[#1A73E8] hover:underline font-semibold">
-                                Masuk Portal Layanan Mandiri <ArrowRight class="size-4" />
+                        <div class="pt-8 mt-12 relative z-10 border-t border-white/20">
+                            <a href="/login" class="inline-flex items-center justify-center w-full rounded-full bg-white text-slate-900 hover:bg-amber-50 transition-colors duration-300 px-8 py-4 text-[10px] font-bold font-sans uppercase tracking-[0.2em] shadow-xl">
+                                Masuk Portal <ArrowRight class="size-4 ml-3" />
                             </a>
                         </div>
                     </section>

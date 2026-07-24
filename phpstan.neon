@@ -1,0 +1,11 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 5
+    paths:
+        - app
+    excludePaths:
+        - app/Providers/TelescopeServiceProvider.php
+    checkMissingIterableValueType: false
+    treatPhpDocTypesAsCertain: false

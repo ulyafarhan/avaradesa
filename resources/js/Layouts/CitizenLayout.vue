@@ -1,6 +1,7 @@
 <script setup>
 import { inject, ref, computed } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
+import PageProgressBar from './Partials/PageProgressBar.vue';
 import Toast from '../Components/Toast.vue';
 import { alert } from '../Utils/alert';
 import { 
@@ -14,7 +15,10 @@ import {
     Landmark 
 } from '@lucide/vue';
 
-const progress = inject('pageProgress');
+// ponytail: skeleton — reuses pageProgress from app.js
+const isLoading = inject('pageProgress');
+
+
 const page = usePage();
 const warga = computed(() => page.props.auth?.warga || null);
 const showUserMenu = ref(false);
@@ -62,9 +66,7 @@ const getInitials = (name) => {
 
 <template>
     <div class="google-editorial min-h-screen pb-20 md:pb-6">
-        <div v-if="progress" class="fixed top-0 left-0 right-0 z-50 h-1 bg-blue-100 overflow-hidden">
-            <div class="h-full bg-blue-600 w-1/3 rounded-full animate-progress"></div>
-        </div>
+        <PageProgressBar />
 
         <header class="sticky top-0 z-40 border-b border-slate-200/50 bg-white/90 backdrop-blur-md hidden md:block">
             <nav class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -185,7 +187,19 @@ const getInitials = (name) => {
         </div>
 
         <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-            <slot />
+            <Transition name="skeleton-fade" mode="out-in">
+                <div v-if="isLoading" class="space-y-6">
+                    <div class="skeleton skeleton-text w-1/3 h-8 rounded-lg"></div>
+                    <div class="skeleton skeleton-text w-2/3 h-4 rounded"></div>
+                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        <div v-for="n in 4" :key="n" class="skeleton skeleton-card rounded-2xl h-28"></div>
+                    </div>
+                    <div class="grid gap-4 lg:grid-cols-3">
+                        <div v-for="n in 3" :key="n" class="skeleton skeleton-card rounded-2xl h-48"></div>
+                    </div>
+                </div>
+                <div v-else><slot /></div>
+            </Transition>
         </main>
 
         <div v-if="showUserMenu" class="fixed inset-0 z-30" @click="showUserMenu = false" />
@@ -209,13 +223,27 @@ const getInitials = (name) => {
 .google-editorial .bg-primary { background-color: #1A73E8; }
 .google-editorial .bg-primary-soft { background-color: #E8F0FE; color: #1A73E8; }
 
-.animate-progress {
-    animation: progress-indeterminate 1.5s ease-in-out infinite;
+/* ponytail: skeleton shimmer — minimal, no deps */
+.skeleton {
+    background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 37%, #e5e7eb 63%);
+    background-size: 400% 100%;
+    animation: skeleton-shimmer 1.4s ease infinite;
+}
+.skeleton-text { background-color: #e5e7eb; }
+.skeleton-card { background-color: #f3f4f6; }
+
+@keyframes skeleton-shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
 }
 
-@keyframes progress-indeterminate {
-    0% { transform: translateX(-100%) scaleX(0.5); }
-    50% { transform: translateX(100%) scaleX(1); }
-    100% { transform: translateX(300%) scaleX(0.5); }
+.skeleton-fade-enter-active,
+.skeleton-fade-leave-active {
+    transition: opacity 0.2s ease;
 }
+.skeleton-fade-enter-from,
+.skeleton-fade-leave-to {
+    opacity: 0;
+}
+
 </style>

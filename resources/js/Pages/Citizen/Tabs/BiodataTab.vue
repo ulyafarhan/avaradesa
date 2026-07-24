@@ -101,5 +101,25 @@ const fieldLabels = {
                 <p class="body-lg mt-1 text-neutral font-medium">{{ warga.status_keluarga || '-' }}</p>
             </div>
         </div>
+
+        <div class="editorial-card">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                    <h3 class="font-semibold text-neutral text-sm">Notifikasi Telegram</h3>
+                </div>
+                <span v-if="warga.telegram_chat_id" class="badge success-badge">Terhubung</span>
+                <span v-else class="badge error-badge">Belum Terhubung</span>
+            </div>
+            <p class="body-sm text-secondary mt-3 leading-relaxed">
+                <template v-if="warga.telegram_chat_id">
+                    Status pengajuan surat dan mutasi akan dikirim ke akun Telegram Anda.
+                </template>
+                <template v-else>
+                    Buka <strong>@SIGUdeungBot</strong> di Telegram, ketik <code>/bind NIK_ANDA</code>, lalu masukkan kode Chat ID yang diberikan di halaman
+                    <AppButton href="/warga/profil" variant="link" class="text-blue-600 px-0 text-sm">Edit Biodata</AppButton>.
+                </template>
+            </p>
+        </div>
     </div>
 </template>

@@ -2,10 +2,12 @@
 
 namespace App\Console\Commands;
 
+use App\Services\SystemLogger;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
+use Spatie\Activitylog\Models\Activity;
 
 /**
  * Perintah Artisan untuk membersihkan data lama secara berkala (chatbot logs, audit logs, token expired, failed jobs).
@@ -57,12 +59,25 @@ class SystemCleanupCommand extends Command
             Artisan::call('sanctum:prune-expired');
             $this->info('Sanctum tokens pruned.');
 
+            $deletedActivityLogs = Activity::query()
+                ->where('created_at', '<', now()->subDays(90))
+                ->delete();
+            $this->info("Deleted $deletedActivityLogs activity logs older than 90 days.");
+            Log::info("System cleanup: Deleted $deletedActivityLogs activity logs.");
+
             $this->info('Pruning failed queue jobs...');
             Artisan::call('queue:prune-failed', ['--hours' => 72]);
             $this->info('Failed queue jobs pruned.');
 
             $this->info('System cleanup completed successfully.');
             Log::info('System cleanup completed successfully.');
+
+            SystemLogger::log('system.cleanup', 'Pembersihan sistem selesai', null, [
+                'chatbot_logs' => $deletedChatbotLogs,
+                'audit_logs' => $deletedAuditLogs,
+                'activity_logs' => $deletedActivityLogs,
+            ]);
+
             return Command::SUCCESS;
         } catch (\Exception $e) {
             $this->error('Error during system cleanup: ' . $e->getMessage());

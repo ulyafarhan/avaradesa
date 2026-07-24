@@ -12,6 +12,8 @@ use Database\Seeders\KategoriSuratSeeder;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
+use Illuminate\Http\UploadedFile;
+
 class PengajuanSuratTest extends TestCase
 {
     protected $warga;
@@ -76,7 +78,7 @@ class PengajuanSuratTest extends TestCase
             ->postJson('/api/v1/surat/pengajuan', [
                 'kategori_surat_id' => $this->kategori->id,
                 'data_isian' => ['keperluan' => 'Melamar pekerjaan', 'lama_tinggal' => '10'],
-                'file_syarat' => ['ktp' => '/storage/ktp.jpg', 'kk' => '/storage/kk.jpg'],
+                'file_syarat' => ['ktp' => UploadedFile::fake()->image('ktp.jpg'), 'kk' => UploadedFile::fake()->image('kk.jpg')],
             ]);
 
         $response->assertStatus(201)
@@ -95,7 +97,7 @@ class PengajuanSuratTest extends TestCase
         $response = $this->withToken($token)
             ->postJson('/api/v1/surat/pengajuan', [
                 'data_isian' => ['keperluan' => 'Test'],
-                'file_syarat' => ['ktp' => 'test.jpg'],
+                'file_syarat' => ['ktp' => UploadedFile::fake()->image('ktp.jpg')],
             ]);
 
         $response->assertStatus(422);
@@ -109,7 +111,7 @@ class PengajuanSuratTest extends TestCase
             ->postJson('/api/v1/surat/pengajuan', [
                 'kategori_surat_id' => 'non-existent-id',
                 'data_isian' => ['keperluan' => 'Test'],
-                'file_syarat' => ['ktp' => 'test.jpg'],
+                'file_syarat' => ['ktp' => UploadedFile::fake()->image('ktp.jpg')],
             ]);
 
         $response->assertStatus(422);
@@ -274,7 +276,7 @@ class PengajuanSuratTest extends TestCase
             ->postJson('/api/v1/surat/pengajuan', [
                 'kategori_surat_id' => $this->kategori->id,
                 'data_isian' => ['keperluan' => 'Test'],
-                'file_syarat' => ['ktp' => 'test.jpg'],
+                'file_syarat' => ['ktp' => UploadedFile::fake()->image('ktp.jpg')],
             ]);
 
         $response->assertStatus(201);
@@ -289,7 +291,7 @@ class PengajuanSuratTest extends TestCase
             ->postJson('/api/v1/surat/pengajuan', [
                 'kategori_surat_id' => $this->kategori->id,
                 'data_isian' => ['keperluan' => 'Test'],
-                'file_syarat' => ['ktp' => 'test.jpg'],
+                'file_syarat' => ['ktp' => UploadedFile::fake()->image('ktp.jpg')],
             ]);
 
         $response->assertStatus(201);

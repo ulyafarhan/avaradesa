@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\TelegramWebhookController;
 use App\Http\Controllers\Api\VerifikasiController;
 use App\Http\Controllers\Api\ChatbotController;
 use App\Http\Controllers\Api\WhatsAppWebhookController;
+use App\Http\Controllers\Api\GatewaySyncController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -47,15 +48,15 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/reset-pin', [AuthController::class, 'resetPin'])->middleware('throttle:3,1');
 
     // Informasi Publik
-    Route::get('/informasi', [InformasiPublikController::class, 'index']);
-    Route::get('/informasi/{slug}', [InformasiPublikController::class, 'show']);
+    Route::get('/informasi', [InformasiPublikController::class, 'index'])->middleware('throttle:60,1');
+    Route::get('/informasi/{slug}', [InformasiPublikController::class, 'show'])->middleware('throttle:60,1');
 
     // Statistik Publik
-    Route::get('/statistik/demografi', [StatistikController::class, 'demografi']);
-    Route::get('/statistik/layanan', [StatistikController::class, 'layanan']);
+    Route::get('/statistik/demografi', [StatistikController::class, 'demografi'])->middleware('throttle:60,1');
+    Route::get('/statistik/layanan', [StatistikController::class, 'layanan'])->middleware('throttle:60,1');
 
     // Verifikasi QR Code
-    Route::get('/verifikasi/{hash}', [VerifikasiController::class, 'verify']);
+    Route::get('/verifikasi/{hash}', [VerifikasiController::class, 'verify'])->middleware('throttle:60,1');
 
     // Telegram Webhook
     Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle'])->middleware('throttle:60,1');
@@ -68,8 +69,6 @@ Route::prefix('v1')->group(function () {
 Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/profile', [AuthController::class, 'profile']);
-    Route::get('/surat/pengajuan/{id}', [PengajuanSuratController::class, 'show'])->middleware('throttle:30,1');
-    Route::get('/surat/pengajuan/{id}/download', [PengajuanSuratController::class, 'downloadPdf'])->middleware('throttle:30,1');
 
     // Chatbot
     Route::post('/chat', [ChatbotController::class, 'chat'])->middleware('throttle:10,1');
@@ -90,6 +89,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'ability:warga'])->group(functi
     Route::get('/surat/kategori/{id}', [PengajuanSuratController::class, 'detailKategori'])->middleware('throttle:30,1');
     Route::post('/surat/pengajuan', [PengajuanSuratController::class, 'store'])->middleware('throttle:5,1');
     Route::get('/surat/pengajuan', [PengajuanSuratController::class, 'index'])->middleware('throttle:30,1');
+    Route::get('/surat/pengajuan/{id}', [PengajuanSuratController::class, 'show'])->middleware('throttle:30,1');
+    Route::get('/surat/pengajuan/{id}/download', [PengajuanSuratController::class, 'downloadPdf'])->middleware('throttle:30,1');
 
     // Mutasi Penduduk
     Route::post('/mutasi', [MutasiPendudukController::class, 'store'])->middleware('throttle:3,1');
@@ -101,7 +102,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'ability:warga'])->group(functi
 });
 
 // Protected Routes - Admin Only
-Route::prefix('v1/admin')->middleware(['auth:sanctum', 'ability:admin'])->group(function () {
+Route::prefix('v1/admin')->middleware(['auth:sanctum', 'ability:admin', 'throttle:60,1'])->group(function () {
 
     // Manajemen Penduduk
     Route::get('/penduduk', [AdminPendudukController::class, 'index']);
@@ -145,4 +146,9 @@ Route::prefix('v1/admin')->middleware(['auth:sanctum', 'ability:admin'])->group(
     Route::delete('/fasilitas/{id}', [AdminResourceController::class, 'fasilitasDestroy']);
 
     Route::get('/audit-log', [AdminResourceController::class, 'auditLogIndex']);
+});
+
+// Gateway Sync — dipanggil oleh wa-gateway tiap 5 menit
+Route::prefix('v1/gateway')->middleware(['throttle:30,1', \App\Http\Middleware\VerifyGatewayApiKey::class])->group(function () {
+    Route::get('/sync', [GatewaySyncController::class, 'sync']);
 });

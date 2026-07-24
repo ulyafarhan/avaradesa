@@ -50,7 +50,7 @@ return [
     |
     */
 
-    'expiration' => env('SANCTUM_TOKEN_EXPIRATION', 1440), // 24 jam
+    'expiration' => (int) env('SANCTUM_TOKEN_EXPIRATION', 240), // 4 jam
 
     /*
     |--------------------------------------------------------------------------

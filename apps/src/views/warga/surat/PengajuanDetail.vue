@@ -7,16 +7,14 @@ import type { PengajuanSurat } from '../../../api/types'
 import StatusBadge from '../../../components/StatusBadge.vue'
 
 import { useAuthStore } from '../../../stores/authStore'
-import { saveFileLocally } from '../../../api/native'
+
+const downloading = ref(false)
 
 const route   = useRoute()
 const router  = useRouter()
 const auth    = useAuthStore()
 const item    = ref<PengajuanSurat | null>(null)
 const loading = ref(true)
-const downloading = ref(false)
-
-const showPreviewModal = ref(false)
 
 onMounted(async () => {
   try {
@@ -56,145 +54,18 @@ async function handleDownloadPrint() {
     const blobUrl = URL.createObjectURL(blob)
     const filename = `Surat_${item.value.nomor_registrasi?.replace(/\//g, '_') ?? 'Selesai'}.pdf`
     
-    await saveFileLocally(filename, blobUrl)
+    const a = document.createElement('a')
+    a.href = blobUrl
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(blobUrl)
   } catch (err: any) {
     alert(err?.message ?? 'Gagal mengunduh PDF surat')
   } finally {
     downloading.value = false
   }
-}
-
-function printClientPdf() {
-  if (!item.value?.surat_html) {
-    alert('Format surat tidak tersedia untuk dicetak secara offline.');
-    return;
-  }
-
-  const elem = document.getElementById('printable-surat')
-  if (!elem) {
-    alert('Templat surat tidak ditemukan.')
-    return
-  }
-
-  const win = window.open('', '', 'width=800,height=900')
-  if (!win) return
-  
-  win.document.write(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Cetak Surat - ${item.value?.nomor_registrasi ?? ''}</title>
-        <style>
-          @page { size: A4; margin: 20mm 15mm; }
-          body { 
-            font-family: 'Times New Roman', Times, serif; 
-            background: #fff; 
-            color: #000; 
-            margin: 0;
-            padding: 0;
-            font-size: 12pt;
-            line-height: 1.35;
-          }
-          * { box-sizing: border-box; }
-          
-          /* Kop Surat */
-          .kop-surat {
-            display: flex;
-            align-items: center;
-            border-bottom: 3px double #000;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-          }
-          .kop-logo {
-            width: 80px;
-            display: flex;
-            justify-content: flex-start;
-          }
-          .kop-logo img { width: 70px; height: auto; }
-          .kop-text {
-            flex: 1;
-            text-align: center;
-          }
-          .kop-text h4, .kop-text h3, .kop-text p {
-            margin: 0; padding: 0; line-height: 1.25;
-          }
-          .kop-text h4 { font-size: 11pt; font-weight: bold; text-transform: uppercase; }
-          .kop-text h3 { font-size: 13pt; font-weight: bold; text-transform: uppercase; margin-top: 2px; }
-          .kop-text p { font-size: 8pt; font-style: italic; margin-top: 4px; }
-          .kop-space { width: 80px; } /* for balance */
-
-          /* Header */
-          .title-box { text-align: center; margin: 15px 0; }
-          .title-box h1 { font-size: 14pt; text-decoration: underline; font-weight: bold; margin: 0; }
-          .title-box p { font-size: 12pt; margin: 5px 0 0 0; }
-
-          /* Content */
-          .content-text { text-align: justify; margin: 15px 0; }
-          
-          /* Table Biodata */
-          .biodata-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 10px 0 10px 30px;
-          }
-          .biodata-table td { padding: 3px 0; vertical-align: top; }
-          .biodata-table td.col-label { width: 160px; }
-          .biodata-table td.col-colon { width: 15px; }
-
-          /* Signature block */
-          .footer-section {
-            margin-top: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-          }
-          .qr-box {
-            text-align: center;
-          }
-          .qr-box img { width: 80px; height: 80px; margin-bottom: 5px; }
-          .qr-box p { font-size: 8pt; margin: 0; color: #555; }
-          
-          .signature-box {
-            text-align: center;
-            width: 250px;
-            position: relative;
-          }
-          .signature-box p { margin: 2px 0; }
-          .signature-space { height: 70px; position: relative; }
-          
-          /* Stempel placement */
-          .stempel-img {
-            position: absolute;
-            left: -40px;
-            top: 10px;
-            width: 130px;
-            opacity: 0.85;
-            z-index: -1;
-          }
-
-          .bottom-footer {
-            margin-top: 50px;
-            text-align: center;
-            font-size: 8pt;
-            color: #666;
-            border-top: 1px solid #ccc;
-            padding-top: 10px;
-          }
-        </style>
-      </head>
-      <body>
-        ${elem.innerHTML}
-        <script>
-          window.onload = function() {
-            window.focus();
-            window.print();
-            setTimeout(function() { window.close(); }, 500);
-          }
-        <\/script>
-      </body>
-    </html>
-  `)
-  win.document.close()
 }
 </script>
 
@@ -249,49 +120,11 @@ function printClientPdf() {
           </div>
         </div>
 
-        <!-- Action Download / Print Buttons when Selesai -->
-        <div v-if="item.status === 'Selesai'" class="mt-4 pt-3 border-t space-y-2.5" style="border-color: var(--clr-border-light);">
-          <button @click="printClientPdf" class="w-full btn btn-primary py-3 flex items-center justify-center gap-2 font-bold shadow-md press">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-            Cetak Surat Ke PDF (Klien)
+        <div v-if="item.status === 'Selesai'" class="mt-4 pt-3 border-t" style="border-color: var(--clr-border-light);">
+          <button @click="handleDownloadPrint" class="w-full btn btn-primary py-3 flex items-center justify-center gap-2 font-bold shadow-md press">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Unduh Surat
           </button>
-          <div class="grid grid-cols-2 gap-2">
-            <button @click="showPreviewModal = true" class="w-full py-2 text-xs font-semibold rounded-xl border flex items-center justify-center gap-1.5 transition-colors press" style="border-color: var(--clr-border); color: var(--clr-text);">
-              <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-              Pratinjau Surat
-            </button>
-            <button @click="handleDownloadPrint" class="w-full py-2 text-xs font-semibold rounded-xl border flex items-center justify-center gap-1.5 transition-colors press" style="border-color: var(--clr-border); color: var(--clr-primary);">
-              <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-              Unduh PDF Server
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Native Vue Template (Hidden, Used for Print) -->
-      <div class="hidden" v-if="item?.surat_html">
-        <div id="printable-surat" v-html="item.surat_html"></div>
-      </div>
-
-      <!-- Modal Pratinjau Lembar Surat -->
-      <div v-if="showPreviewModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white text-black max-w-2xl w-full h-[90vh] flex flex-col overflow-hidden rounded-2xl shadow-2xl relative">
-          <div class="flex items-center justify-between p-4 border-b bg-gray-50">
-            <h3 class="font-bold text-sm">Pratinjau Lembar Surat Resmi (Klien)</h3>
-            <button @click="showPreviewModal = false" class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-300">✕</button>
-          </div>
-          <div class="flex-1 bg-gray-200 p-6 overflow-y-auto flex justify-center">
-            <div class="bg-white shadow-md w-full max-w-[210mm] min-h-[297mm] p-[15mm] text-black" v-if="item?.surat_html">
-              <div v-html="item.surat_html"></div>
-            </div>
-          </div>
-
-          <div class="p-4 bg-white border-t flex gap-2">
-            <button @click="printClientPdf(); showPreviewModal = false;" class="w-full btn btn-primary py-3 font-bold text-xs flex items-center justify-center gap-1.5 shadow-md press">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-              Cetak Surat Ini Sekarang
-            </button>
-          </div>
         </div>
       </div>
 

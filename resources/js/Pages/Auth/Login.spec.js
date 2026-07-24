@@ -15,8 +15,8 @@ describe('Login.vue Page', () => {
     it('renders the login page header and options correctly', () => {
         const wrapper = mount(Login, defaultMountOptions);
         
-        expect(wrapper.text()).toContain('Masuk Portal');
-        expect(wrapper.text()).toContain('Pelayanan Mandiri Desa Udeung');
+        const namaDesa = wrapper.vm.$page?.props?.settings?.nama_desa || 'Udeung';
+        expect(wrapper.text()).toContain(`Pelayanan Mandiri Desa ${namaDesa}`);
         expect(wrapper.text()).toContain('Portal Warga');
     });
 

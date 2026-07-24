@@ -110,22 +110,26 @@ return [
     | WHATSAPP GATEWAY
     |--------------------------------------------------------------------------
     |
-    | Konfigurasi fallback untuk WhatsApp Gateway self-hosted (wa-gateway/Baileys).
+    | Konfigurasi WhatsApp (multi-provider: wa-gateway atau fonnte).
     | Nilai aktual diambil dari database pengaturan_desa agar dapat dikonfigurasi
     | oleh admin tanpa mengubah file ini.
     |
     | Variabel env (sebagai fallback jika DB kosong):
+    | - WHA_PROVIDER     : wa-gateway | fonnte
     | - WHA_GATEWAY_URL  : URL gateway (contoh: http://127.0.0.1:2785)
     | - WHA_API_KEY      : API key gateway (header X-API-Key)
     | - WHA_SESSION_ID   : Session ID WhatsApp (contoh: default)
     | - WHA_DEFAULT_TARGET : Nomor HP default untuk notifikasi berita (contoh: 62812xxxx)
+    | - FONNTE_TOKEN     : Token Fonnte API (jika pakai provider fonnte)
     |
     */
     'whatsapp' => [
+        'provider'       => env('WHA_PROVIDER', 'wa-gateway'),
         'gateway_url'    => env('WHA_GATEWAY_URL', 'http://localhost:2785'),
         'api_key'        => env('WHA_API_KEY'),
         'session_id'     => env('WHA_SESSION_ID', 'default'),
         'default_target' => env('WHA_DEFAULT_TARGET'),
+        'fonnte_token'   => env('FONNTE_TOKEN', ''),
     ],
 
     /*

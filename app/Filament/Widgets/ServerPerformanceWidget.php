@@ -37,26 +37,8 @@ class ServerPerformanceWidget extends Widget
         $ramPercentage = 0;
 
         if (PHP_OS_FAMILY === 'Windows') {
-            $output = [];
-            @exec('wmic OS get FreePhysicalMemory,TotalVisibleMemorySize /Value', $output);
-            $freeMemKb = 0;
-            $totalMemKb = 0;
-            foreach ($output as $line) {
-                if (strpos($line, 'FreePhysicalMemory') !== false) {
-                    $parts = explode('=', $line);
-                    $freeMemKb = isset($parts[1]) ? (int)trim($parts[1]) : 0;
-                }
-                if (strpos($line, 'TotalVisibleMemorySize') !== false) {
-                    $parts = explode('=', $line);
-                    $totalMemKb = isset($parts[1]) ? (int)trim($parts[1]) : 0;
-                }
-            }
-            if ($totalMemKb > 0) {
-                $ramTotal = $totalMemKb * 1024; // KB to Bytes
-                $ramFree = $freeMemKb * 1024;
-                $ramUsed = $ramTotal - $ramFree;
-                $ramPercentage = round(($ramUsed / $ramTotal) * 100, 1);
-            }
+            // Pada Windows kita fallback menggunakan penggunaan memory oleh script PHP.
+            // Exec WMIC dihapus untuk menghindari risiko eksekusi dan meningkatkan keamanan (L-4).
         } else {
             // Linux / Unix
             if (@is_readable('/proc/meminfo')) {

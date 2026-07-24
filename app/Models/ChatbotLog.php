@@ -31,11 +31,11 @@ class ChatbotLog extends Model
     protected $table = 'chatbot_logs';
 
     /**
-     * Nonaktifkan timestamps otomatis (created_at di-set manual).
+     * Nonaktifkan kolom updated_at.
      *
-     * @var  bool
+     * @var  string|null
      */
-    public $timestamps = false;
+    public const UPDATED_AT = null;
 
     /**
      * Atribut yang dapat diisi secara massal.

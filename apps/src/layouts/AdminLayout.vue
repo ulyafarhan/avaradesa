@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import { useAppStore } from '../stores/appStore'
@@ -10,6 +10,11 @@ const route  = useRoute()
 const router = useRouter()
 const auth   = useAuthStore()
 const app    = useAppStore()
+
+// ponytail: skeleton — track route transitions
+const isLoading = ref(false)
+router.beforeEach(() => { isLoading.value = true })
+router.afterEach(() => { setTimeout(() => { isLoading.value = false }, 150) })
 
 const menu = [
   { name: 'Dashboard',      path: '/admin/dashboard',      icon: 'M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10' },
@@ -146,11 +151,19 @@ function navigate(path: string) {
 
       <!-- Main Body Content (Scrollable Container) -->
       <main class="flex-1 p-4 md:p-6 pb-20 md:pb-6 overflow-y-auto">
-        <router-view v-slot="{ Component }">
-          <transition name="page" mode="out-in">
-            <component :is="Component" />
-          </transition>
-        </router-view>
+        <Transition name="skeleton-fade" mode="out-in">
+          <div v-if="isLoading" class="space-y-4">
+            <div class="mobile-skeleton h-7 w-1/3 rounded-lg"></div>
+            <div class="mobile-skeleton h-4 w-1/2 rounded"></div>
+            <div class="mobile-skeleton h-48 rounded-2xl"></div>
+            <div class="mobile-skeleton h-32 rounded-2xl"></div>
+          </div>
+          <router-view v-else v-slot="{ Component }">
+            <transition name="page" mode="out-in">
+              <component :is="Component" />
+            </transition>
+          </router-view>
+        </Transition>
       </main>
 
       <!-- ── MOBILE BOTTOM NAVIGATION BAR (Khusus Admin pada layar HP < md) ── -->
@@ -195,3 +208,18 @@ function navigate(path: string) {
     </div>
   </div>
 </template>
+
+<style>
+/* ponytail: skeleton shimmer for mobile admin */
+.mobile-skeleton {
+  background: linear-gradient(90deg, var(--clr-surface-dim, #e5e7eb) 25%, var(--clr-surface, #f3f4f6) 37%, var(--clr-surface-dim, #e5e7eb) 63%);
+  background-size: 400% 100%;
+  animation: mobile-shimmer 1.4s ease infinite;
+}
+@keyframes mobile-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+.skeleton-fade-enter-active, .skeleton-fade-leave-active { transition: opacity 0.15s ease; }
+.skeleton-fade-enter-from, .skeleton-fade-leave-to { opacity: 0; }
+</style>

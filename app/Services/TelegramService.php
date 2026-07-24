@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Penduduk;
+use App\Services\SystemLogger;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -73,12 +75,27 @@ class TelegramService
 
             if (!$response->successful()) {
                 Log::error('Telegram Send Message Failed: ' . $response->body() . ' | Payload: ' . json_encode($payload));
+                SystemLogger::log('notification.sent', "Telegram gagal ke $chatId", null, [
+                    'provider' => 'telegram', 'target' => $chatId, 'status' => $response->status(),
+                ]);
+            } else {
+                SystemLogger::log('notification.sent', "Telegram berhasil ke $chatId", null, [
+                    'provider' => 'telegram', 'target' => $chatId,
+                ]);
             }
 
             return $response->successful();
+        } catch (ConnectionException $e) {
+            Log::warning('Telegram unreachable: '.$e->getMessage());
+            SystemLogger::log('notification.sent', "Telegram unreachable: $chatId", null, [
+                'provider' => 'telegram', 'target' => $chatId, 'error' => $e->getMessage(),
+            ]);
+            return false;
         } catch (\Exception $e) {
             Log::error('Telegram Send Message Error: '.$e->getMessage());
-
+            SystemLogger::log('notification.sent', "Telegram error: $chatId", null, [
+                'provider' => 'telegram', 'target' => $chatId, 'error' => $e->getMessage(),
+            ]);
             return false;
         }
     }
@@ -110,12 +127,17 @@ class TelegramService
 
             if (!$response->successful()) {
                 Log::error('Telegram Send Photo Failed: ' . $response->body() . ' | Photo: ' . $photoUrl);
+                SystemLogger::log('notification.sent', "Telegram foto gagal ke $chatId", null, [
+                    'provider' => 'telegram', 'target' => $chatId, 'type' => 'photo',
+                ]);
             }
 
             return $response->successful();
+        } catch (ConnectionException $e) {
+            Log::warning('Telegram unreachable (photo): '.$e->getMessage());
+            return false;
         } catch (\Exception $e) {
             Log::error('Telegram Send Photo Error: '.$e->getMessage());
-
             return false;
         }
     }
@@ -140,7 +162,7 @@ class TelegramService
 
             $response = Http::timeout(15)->connectTimeout(5)->attach(
                 'document',
-                file_get_contents($filePath),
+                fopen($filePath, 'r'),
                 basename($filePath)
             )->post("{$this->apiUrl}/sendDocument", [
                 'chat_id' => $chatId,
@@ -149,9 +171,11 @@ class TelegramService
             ]);
 
             return $response->successful();
+        } catch (ConnectionException $e) {
+            Log::warning('Telegram unreachable (document): '.$e->getMessage());
+            return false;
         } catch (\Exception $e) {
             Log::error('Telegram Send Document Error: '.$e->getMessage());
-
             return false;
         }
     }
@@ -204,33 +228,15 @@ class TelegramService
             return;
         }
 
-        $statusMessages = [
-            'Pending' => 'Pengajuan surat Anda sedang menunggu verifikasi',
-            'Diproses' => 'Pengajuan surat Anda sedang diproses',
-            'Disetujui' => 'Pengajuan surat Anda telah disetujui',
-            'Ditolak' => 'Pengajuan surat Anda ditolak',
-            'Selesai' => 'Surat Anda telah selesai dan siap diunduh',
-        ];
+        $template = $this->getTemplate('telegram_surat_' . strtolower($status), [
+            '{nomor}' => $nomorRegistrasi,
+            '{catatan}' => $catatan ?? '',
+            '{link}' => config('app.url') . '/warga/dashboard?tab=pengajuan',
+        ]);
 
-        $message = "<b>Status Pengajuan Surat</b>\n\n";
-        $message .= 'Nomor Registrasi: <code>'.$this->escapeHtml($nomorRegistrasi)."</code>\n";
-        $message .= 'Status: '.$this->escapeHtml($statusMessages[$status] ?? $status)."\n";
-
-        if ($catatan) {
-            $message .= "\nCatatan:\n".$this->escapeHtml($catatan);
-        }
-
-        $this->sendMessage($penduduk->telegram_chat_id, $message);
+        $this->sendMessage($penduduk->telegram_chat_id, $template);
     }
 
-    /**
-     * Mengirim notifikasi perubahan status mutasi kependudukan ke warga.
-     *
-     * @param  string  $nik  NIK penduduk yang mengajukan mutasi
-     * @param  string  $jenisMutasi  Jenis mutasi yang dilakukan (Kelahiran, Kematian, Kedatangan, Kepindahan)
-     * @param  string  $status  Status verifikasi mutasi (Disetujui, Ditolak)
-     * @return void
-     */
     public function notifyMutasiStatus(string $nik, string $jenisMutasi, string $status): void
     {
         $penduduk = Penduduk::find($nik);
@@ -239,26 +245,34 @@ class TelegramService
             return;
         }
 
-        $statusPrefix = $status === 'Disetujui' ? '[Disetujui]' : '[Ditolak]';
+        $template = $this->getTemplate('telegram_mutasi_' . strtolower($status), [
+            '{jenis}' => $jenisMutasi,
+            '{status}' => $status,
+        ]);
 
-        $message = "<b>Status Mutasi Kependudukan</b>\n\n";
-        $message .= 'Jenis: '.$this->escapeHtml($jenisMutasi)."\n";
-        $message .= 'Status: '.$this->escapeHtml("{$statusPrefix} {$status}")."\n";
-
-        $this->sendMessage($penduduk->telegram_chat_id, $message);
+        $this->sendMessage($penduduk->telegram_chat_id, $template);
     }
 
     /**
-     * Meng-escape karakter HTML untuk keamanan output.
-     *
-     * Menggunakan htmlspecialchars dengan flag ENT_QUOTES dan ENT_SUBSTITUTE untuk mencegah XSS.
-     *
-     * @param  string  $value  Nilai string yang akan di-escape
-     * @return string  String yang sudah aman dari karakter HTML berbahaya
+     * Cari template dari pengaturan_desa, fallback ke hardcoded.
      */
-    protected function escapeHtml(string $value): string
+    protected function getTemplate(string $key, array $replace): string
     {
-        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $defaults = [
+            'telegram_surat_pending' => "<b>Status Pengajuan Surat</b>\n\nNomor Registrasi: <code>{nomor}</code>\nStatus: menunggu verifikasi",
+            'telegram_surat_diproses' => "<b>Status Pengajuan Surat</b>\n\nNomor Registrasi: <code>{nomor}</code>\nStatus: sedang diproses",
+            'telegram_surat_disetujui' => "<b>Status Pengajuan Surat</b>\n\nNomor Registrasi: <code>{nomor}</code>\nStatus: telah disetujui",
+            'telegram_surat_ditolak' => "<b>Status Pengajuan Surat</b>\n\nNomor Registrasi: <code>{nomor}</code>\nStatus: ditolak\n\nCatatan: {catatan}",
+            'telegram_surat_selesai' => "<b>Status Pengajuan Surat</b>\n\nNomor Registrasi: <code>{nomor}</code>\nStatus: selesai, siap diunduh\n\n{link}",
+            'telegram_mutasi_disetujui' => "<b>Status Mutasi Kependudukan</b>\n\nJenis: {jenis}\nStatus: [{status}] {status}",
+            'telegram_mutasi_ditolak' => "<b>Status Mutasi Kependudukan</b>\n\nJenis: {jenis}\nStatus: [{status}] {status}",
+        ];
+
+        // ponytail: ambil dari pengaturan_desa, fallback ke hardcoded
+        $raw = \App\Models\PengaturanDesa::get('notif_' . $key)
+            ?? ($defaults[$key] ?? '');
+
+        return str_replace(array_keys($replace), array_values($replace), $raw);
     }
 
     /**
@@ -275,9 +289,11 @@ class TelegramService
             ]);
 
             return $response->successful();
+        } catch (ConnectionException $e) {
+            Log::warning('Telegram unreachable (setWebhook): '.$e->getMessage());
+            return false;
         } catch (\Exception $e) {
             Log::error('Telegram Set Webhook Error: '.$e->getMessage());
-
             return false;
         }
     }
@@ -295,6 +311,8 @@ class TelegramService
             if ($response->successful()) {
                 return $response->json('result');
             }
+        } catch (ConnectionException $e) {
+            Log::warning('Telegram unreachable (getMe): '.$e->getMessage());
         } catch (\Exception $e) {
             Log::error('Telegram Get Me Error: '.$e->getMessage());
         }

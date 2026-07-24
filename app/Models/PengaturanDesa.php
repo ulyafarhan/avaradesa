@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 
@@ -21,6 +22,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
  */
 class PengaturanDesa extends Model
 {
+    use HasFactory;
     use HasUlids;
 
     /**
@@ -59,6 +61,21 @@ class PengaturanDesa extends Model
         return [
             'updated_at' => 'datetime',
         ];
+    }
+
+    public function getNilaiAttribute($value): mixed
+    {
+        if ($value === null || $value === '') return $value;
+        try {
+            return decrypt($value);
+        } catch (\Exception) {
+            return $value;
+        }
+    }
+
+    public function setNilaiAttribute($value): void
+    {
+        $this->attributes['nilai'] = encrypt($value);
     }
 
     /**

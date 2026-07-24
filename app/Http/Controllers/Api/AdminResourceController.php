@@ -16,7 +16,7 @@ class AdminResourceController extends Controller
     {
         $query = Keluarga::with('kepalaKeluarga');
         if ($request->filled('search')) {
-            $s = $request->search;
+            $s = str_replace(['%', '_'], ['\\%', '\\_'], $request->search);
             $query->where('no_kk', 'like', "%{$s}%")
                   ->orWhere('alamat', 'like', "%{$s}%")
                   ->orWhere('rt', 'like', "%{$s}%")
@@ -36,6 +36,7 @@ class AdminResourceController extends Controller
 
     public function keluargaStore(Request $request)
     {
+        $this->requireAdminRole();
         $v = $request->validate([
             'no_kk' => 'required|string|size:16|unique:keluarga,no_kk',
             'alamat' => 'required|string',
@@ -44,12 +45,15 @@ class AdminResourceController extends Controller
             'dusun' => 'nullable|string',
         ]);
         $k = Keluarga::create($v);
+        AuditLog::log('admin', auth()->id(), 'create', 'keluarga', $k->no_kk);
         return response()->json(['message' => 'Kartu Keluarga berhasil dibuat', 'data' => $k], 201);
     }
 
     public function keluargaDestroy($no_kk)
     {
+        $this->requireAdminRole();
         Keluarga::where('no_kk', $no_kk)->delete();
+        AuditLog::log('admin', auth()->id(), 'delete', 'keluarga', $no_kk);
         return response()->json(['message' => 'Data KK berhasil dihapus']);
     }
 
@@ -62,6 +66,7 @@ class AdminResourceController extends Controller
 
     public function kategoriSuratStore(Request $request)
     {
+        $this->requireAdminRole();
         $v = $request->validate([
             'kode_surat' => 'required|string|unique:kategori_surat,kode_surat',
             'nama_surat' => 'required|string',
@@ -69,11 +74,13 @@ class AdminResourceController extends Controller
             'is_active' => 'boolean',
         ]);
         $k = KategoriSurat::create($v);
+        AuditLog::log('admin', auth()->id(), 'create', 'kategori_surat', $k->id);
         return response()->json(['message' => 'Kategori surat berhasil dibuat', 'data' => $k], 201);
     }
 
     public function kategoriSuratUpdate(Request $request, $id)
     {
+        $this->requireAdminRole();
         $k = KategoriSurat::findOrFail($id);
         $v = $request->validate([
             'kode_surat' => 'required|string|unique:kategori_surat,kode_surat,'.$id,
@@ -82,12 +89,15 @@ class AdminResourceController extends Controller
             'is_active' => 'boolean',
         ]);
         $k->update($v);
+        AuditLog::log('admin', auth()->id(), 'update', 'kategori_surat', $k->id);
         return response()->json(['message' => 'Kategori surat berhasil diperbarui', 'data' => $k]);
     }
 
     public function kategoriSuratDestroy($id)
     {
+        $this->requireAdminRole();
         KategoriSurat::destroy($id);
+        AuditLog::log('admin', auth()->id(), 'delete', 'kategori_surat', $id);
         return response()->json(['message' => 'Kategori surat berhasil dihapus']);
     }
 
@@ -96,7 +106,8 @@ class AdminResourceController extends Controller
     {
         $query = InventarisFasilitas::query();
         if ($request->filled('search')) {
-            $query->where('nama_fasilitas', 'like', "%{$request->search}%");
+            $search = str_replace(['%', '_'], ['\\%', '\\_'], $request->search);
+            $query->where('nama_fasilitas', 'like', "%{$search}%");
         }
         $data = $query->paginate(15);
         return response()->json([
@@ -112,6 +123,7 @@ class AdminResourceController extends Controller
 
     public function fasilitasStore(Request $request)
     {
+        $this->requireAdminRole();
         $v = $request->validate([
             'nama_fasilitas' => 'required|string',
             'kategori' => 'required|string',
@@ -120,12 +132,15 @@ class AdminResourceController extends Controller
             'jumlah' => 'required|integer',
         ]);
         $f = InventarisFasilitas::create($v);
+        AuditLog::log('admin', auth()->id(), 'create', 'inventaris_fasilitas', $f->id);
         return response()->json(['message' => 'Inventaris fasilitas berhasil ditambahkan', 'data' => $f], 201);
     }
 
     public function fasilitasDestroy($id)
     {
+        $this->requireAdminRole();
         InventarisFasilitas::destroy($id);
+        AuditLog::log('admin', auth()->id(), 'delete', 'inventaris_fasilitas', $id);
         return response()->json(['message' => 'Fasilitas berhasil dihapus']);
     }
 
@@ -133,6 +148,7 @@ class AdminResourceController extends Controller
     public function auditLogIndex(Request $request)
     {
         $data = AuditLog::orderByDesc('created_at')->paginate(20);
+        $data->getCollection()->transform(fn ($log) => $log->makeHidden(['data_lama', 'data_baru']));
         return response()->json([
             'data' => $data->items(),
             'meta' => [

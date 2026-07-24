@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
@@ -36,7 +37,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Penduduk extends Authenticatable
 {
-    use HasApiTokens, SoftDeletes;
+    use HasApiTokens, HasFactory, SoftDeletes;
 
     /**
      * Nama tabel database yang terhubung dengan model ini.
@@ -103,6 +104,10 @@ class Penduduk extends Authenticatable
      */
     protected $hidden = [
         'telegram_chat_id',
+        'pin_hash',
+        'biometric_key',
+        'pin_attempts',
+        'locked_until',
     ];
 
     /**
@@ -117,6 +122,18 @@ class Penduduk extends Authenticatable
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
+    }
+
+    // ponytail: auto-format no_hp ke 628xx — terima 08, +62, 62, 8
+    public function setNoHpAttribute($value): void
+    {
+        $clean = preg_replace('/[^0-9]/', '', $value);
+        if (strlen($clean) > 0 && $clean[0] === '0') {
+            $clean = '62' . substr($clean, 1);
+        } elseif (strlen($clean) > 0 && $clean[0] === '8') {
+            $clean = '62' . $clean;
+        }
+        $this->attributes['no_hp'] = $clean;
     }
 
     /**

@@ -26,11 +26,13 @@ class AuditLogResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-finger-print';
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static string|\UnitEnum|null $navigationGroup = 'Pengaturan';
 
-    protected static ?string $navigationLabel = 'Audit Log';
+    protected static ?string $navigationLabel = 'Log Aktivitas';
 
-    protected static ?int $navigationSort = 9;
+    protected static ?int $navigationSort = 12;
 
     /**
      * Audit log bersifat read-only; tidak ada tombol buat data baru.

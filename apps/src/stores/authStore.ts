@@ -8,8 +8,6 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(null)
   const user = ref<User | null>(null)
   const loading = ref(false)
-  const hasPin = ref(false)
-  const hasBiometric = ref(false)
 
   const isLoggedIn = computed(() => !!token.value)
   const role = computed(() => user.value?.role ?? null)
@@ -21,8 +19,6 @@ export const useAuthStore = defineStore('auth', () => {
       const res: any = await api.post<AuthResponse>(endpoints.auth.loginWarga, { nik, no_kk })
       token.value = res.token
       user.value = { ...res.user, role: 'warga' }
-      hasPin.value = !!res.has_pin
-      hasBiometric.value = !!res.has_biometric
       // Simpan NIK terakhir untuk kemudahan login cepat
       localStorage.setItem('last_nik', nik)
       persist()
@@ -43,66 +39,58 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function registerPin(nik: string, no_kk: string, pin: string) {
-    const res: any = await api.post(endpoints.auth.registerPin, { nik, no_kk, pin, pin_confirmation: pin })
-    hasPin.value = true
-    localStorage.setItem('last_nik', nik)
-    return res
-  }
 
-  async function loginPin(nik: string, pin: string) {
-    loading.value = true
-    try {
-      const res: any = await api.post(endpoints.auth.loginPin, { nik, pin })
-      token.value = res.token ?? res.data?.token
-      user.value = { ...(res.user ?? res.data?.user), role: 'warga' }
-      hasPin.value = true
-      hasBiometric.value = !!res.has_biometric
-      localStorage.setItem('last_nik', nik)
-      persist()
-    } finally {
-      loading.value = false
-    }
-  }
-
-  async function registerBiometric(biometricKey: string) {
-    const res: any = await api.post(endpoints.auth.registerBiometric, { biometric_key: biometricKey })
-    hasBiometric.value = true
-    if (user.value?.nik) {
-      localStorage.setItem(`bio_key_${user.value.nik}`, biometricKey)
-    }
-    return res
-  }
-
-  async function loginBiometric(nik: string, biometricKey: string) {
-    loading.value = true
-    try {
-      const res: any = await api.post(endpoints.auth.loginBiometric, { nik, biometric_key: biometricKey })
-      token.value = res.token ?? res.data?.token
-      user.value = { ...(res.user ?? res.data?.user), role: 'warga' }
-      hasBiometric.value = true
-      localStorage.setItem('last_nik', nik)
-      persist()
-    } finally {
-      loading.value = false
-    }
-  }
-
-  async function resetPin(nik: string, no_kk: string, pin: string) {
-    return api.post(endpoints.auth.resetPin, { nik, no_kk, pin, pin_confirmation: pin })
-  }
 
   async function fetchMe() {
     if (!token.value) return
     try {
       const res: any = await api.get(endpoints.auth.me)
       user.value = res.user ?? res.data ?? res
-      hasPin.value = !!res.has_pin
-      hasBiometric.value = !!res.has_biometric
     } catch {
       logout()
     }
   }
+
+  async function loginPin(nik: string, pin: string) {
+    loading.value = true
+    try {
+      const res: any = await api.post(endpoints.auth.loginPin, { nik, pin })
+      token.value = res.token
+      user.value = { ...res.user, role: 'warga' }
+      persist()
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function loginBiometric(nik: string, bioKey: string) {
+    loading.value = true
+    try {
+      const res: any = await api.post(endpoints.auth.loginBiometric, { nik, biometric_key: bioKey })
+      token.value = res.token
+      user.value = { ...res.user, role: 'warga' }
+      persist()
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function registerPin(nik: string, no_kk: string, pin: string) {
+    await api.post(endpoints.auth.registerPin, { nik, no_kk, pin, pin_confirmation: pin })
+    user.value = { ...user.value!, has_pin: true } as any
+  }
+
+  async function resetPin(nik: string, no_kk: string, pin: string) {
+    await api.post(endpoints.auth.resetPin, { nik, no_kk, pin, pin_confirmation: pin })
+  }
+
+  async function registerBiometric(bioKey: string) {
+    await api.post(endpoints.auth.registerBiometric, { biometric_key: bioKey })
+    user.value = { ...user.value!, has_biometric: true } as any
+  }
+
+  const hasPin = computed(() => !!(user.value as any)?.has_pin)
+  const hasBiometric = computed(() => !!(user.value as any)?.has_biometric)
 
   function logout() {
     token.value = null
@@ -112,7 +100,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   function persist() {
     localStorage.setItem('auth', JSON.stringify({
-      state: { token: token.value, user: user.value, hasPin: hasPin.value, hasBiometric: hasBiometric.value }
+      state: { token: token.value, user: user.value }
     }))
   }
 
@@ -123,8 +111,6 @@ export const useAuthStore = defineStore('auth', () => {
       const parsed = JSON.parse(raw)
       token.value = parsed.state?.token ?? null
       user.value = parsed.state?.user ?? null
-      hasPin.value = parsed.state?.hasPin ?? false
-      hasBiometric.value = parsed.state?.hasBiometric ?? false
     } catch {
       localStorage.removeItem('auth')
     }
@@ -133,7 +119,9 @@ export const useAuthStore = defineStore('auth', () => {
   hydrate()
 
   return {
-    token, user, loading, hasPin, hasBiometric, isLoggedIn, role, isAdmin,
-    loginWarga, loginAdmin, registerPin, loginPin, registerBiometric, loginBiometric, resetPin, fetchMe, logout
+    token, user, loading, isLoggedIn, role, isAdmin, hasPin, hasBiometric,
+    loginWarga, loginAdmin, loginPin, loginBiometric,
+    registerPin, resetPin, registerBiometric,
+    fetchMe, logout
   }
 })

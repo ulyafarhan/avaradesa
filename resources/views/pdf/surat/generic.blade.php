@@ -146,7 +146,7 @@
 
     <!-- PARAGRAF PEMBUKA -->
     <div class="content">
-        <p>Yang bertanda tangan di bawah ini Kepala {{ $desa['nama_desa'] }} Kecamatan {{ title_case(strtolower($desa['nama_kecamatan'])) }} {{ title_case(strtolower($desa['nama_kabupaten'])) }}, menerangkan dengan sebenarnya bahwa:</p>
+        <p>Yang bertanda tangan di bawah ini Kepala {{ $desa['nama_desa'] }} Kecamatan {{ ucwords(strtolower($desa['nama_kecamatan'])) }} {{ ucwords(strtolower($desa['nama_kabupaten'])) }}, menerangkan dengan sebenarnya bahwa:</p>
     </div>
 
     <!-- BIODATA PEMOHON & DYNAMIC ISIAN FORMULIR (JSON SCHEMA FILAMENT) -->
@@ -209,7 +209,7 @@
 
     <!-- AREA TANDA TANGAN KEPALA DESA & TTE QR CODE -->
     <div class="signature">
-        <p>{{ title_case(strtolower($desa['nama_desa'])) }}, {{ $tanggal_surat }}</p>
+        <p>{{ ucwords(strtolower($desa['nama_desa'])) }}, {{ $tanggal_surat }}</p>
         <p><strong>Kepala {{ $desa['nama_desa'] }}</strong></p>
 
         <!-- Gambar Stempel Resmi Desa (Jika Ada) -->

@@ -11,11 +11,11 @@ class AdminPendudukController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Penduduk::query();
+        $query = Penduduk::withoutTrashed()->query();
 
         // Pencarian berdasarkan NIK atau Nama
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = str_replace(['%', '_'], ['\\%', '\\_'], $request->search);
             $query->where('nik', 'like', "%{$search}%")
                   ->orWhere('nama_lengkap', 'like', "%{$search}%")
                   ->orWhere('no_kk', 'like', "%{$search}%");
@@ -41,7 +41,7 @@ class AdminPendudukController extends Controller
 
     public function show($id)
     {
-        $penduduk = Penduduk::findOrFail($id);
+        $penduduk = Penduduk::withoutTrashed()->findOrFail($id);
         
         return response()->json([
             'data' => $penduduk
@@ -50,6 +50,7 @@ class AdminPendudukController extends Controller
 
     public function store(Request $request)
     {
+        $this->requireAdminRole();
         $validated = $request->validate([
             'nik' => 'required|string|size:16|unique:penduduk,nik',
             'no_kk' => 'required|string|size:16',
@@ -75,7 +76,8 @@ class AdminPendudukController extends Controller
 
     public function update(Request $request, $id)
     {
-        $penduduk = Penduduk::findOrFail($id);
+        $this->requireAdminRole();
+        $penduduk = Penduduk::withoutTrashed()->findOrFail($id);
 
         $validated = $request->validate([
             'nik' => ['required', 'string', 'size:16', Rule::unique('penduduk', 'nik')->ignore($penduduk->id)],
@@ -102,7 +104,8 @@ class AdminPendudukController extends Controller
 
     public function destroy($id)
     {
-        $penduduk = Penduduk::findOrFail($id);
+        $this->requireAdminRole();
+        $penduduk = Penduduk::withoutTrashed()->findOrFail($id);
         
         // Hapus juga akun user terkait jika ada
         if ($penduduk->user) {

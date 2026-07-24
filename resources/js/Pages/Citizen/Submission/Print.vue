@@ -1,10 +1,12 @@
 <script setup>
 import { onMounted, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
+import DOMPurify from 'dompurify';
 
 const props = defineProps({
     pengajuan: Object,
     qrCodeSvg: String,
+    bodyContent: String,
     tanggalSurat: String,
     settings: Object,
 });
@@ -31,10 +33,7 @@ const formatDate = (dateStr) => {
     });
 };
 
-const formatCurrency = (val) => {
-    if (!val) return 'Rp 0';
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
-};
+const sanitizeSvg = (svg) => DOMPurify.sanitize(svg || '', { USE_PROFILES: { svg: true } });
 </script>
 
 <template>
@@ -135,7 +134,7 @@ const formatCurrency = (val) => {
             </table>
 
             <div class="mb-5 text-justify indent-10 leading-relaxed">
-                Bahwa yang bersangkutan merupakan benar warga yang berdomisili di Desa {{ settings.nama_desa || 'Udeung' }}, Kecamatan {{ settings.kecamatan || 'Bandar Baru' }}, Kabupaten {{ settings.kabupaten || 'Pidie Jaya' }}, yang termasuk wilayah terdampak bencana hidrometeorologi pada tahun 2025.
+                {{ bodyContent || 'Bahwa yang bersangkutan merupakan benar warga yang berdomisili di Desa ' + (settings.nama_desa || 'Udeung') + ', Kecamatan ' + (settings.kecamatan || 'Bandar Baru') + ', Kabupaten ' + (settings.kabupaten || 'Pidie Jaya') + ', yang termasuk wilayah terdampak bencana hidrometeorologi pada tahun 2025.' }}
             </div>
 
             <div class="mb-6 text-justify indent-10 leading-relaxed">
@@ -145,7 +144,7 @@ const formatCurrency = (val) => {
             <div class="mt-8 flex justify-between items-end relative">
                 
                 <div class="qr-block text-center flex flex-col items-center pl-4 pb-2">
-                    <div class="qr-code-svg shadow-none p-0 bg-transparent" v-html="qrCodeSvg"></div>
+                    <div class="qr-code-svg shadow-none p-0 bg-transparent" v-html="sanitizeSvg(qrCodeSvg)"></div>
                 </div>
 
                 <div class="sig-block text-center pr-8 min-w-[280px] relative">

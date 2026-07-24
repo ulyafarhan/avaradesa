@@ -32,6 +32,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\TrackTraffic::class,
         ]);
 
+        $middleware->api(append: [
+            \App\Http\Middleware\ForceJsonResponse::class,
+        ]);
+
         $middleware->throttleApi();
 
         $middleware->alias([
@@ -61,6 +65,10 @@ return Application::configure(basePath: dirname(__DIR__))
                     'message' => 'Tidak terotentikasi',
                 ], 401);
             }
+            $guard = !empty($e->guards()) ? $e->guards()[0] : (str_starts_with($request->path(), 'admin/') ? 'admin' : null);
+            if ($guard === 'admin') {
+                return redirect()->guest('/admin/login');
+            }
             return redirect()->guest(route('login'));
         });
 
@@ -86,6 +94,13 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->renderable(function (QueryException $e, Request $request) {
+            \App\Services\SystemLogger::log('system.error', 'Database query exception', null, [
+                'message' => $e->getMessage(),
+                'sql' => $e->getSql(),
+                'path' => $request->path(),
+                'method' => $request->method(),
+            ]);
+
             if ($request->expectsJson() || $request->is('api/*')) {
                 report($e);
                 return response()->json([
@@ -94,5 +109,25 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 500);
             }
             return $e;
+        });
+
+        $exceptions->reportable(function (\Throwable $e) {
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) return false;
+            if ($e instanceof \Illuminate\Auth\AuthenticationException) return false;
+            if ($e instanceof \Illuminate\Auth\Access\AuthorizationException) return false;
+            if ($e instanceof \Illuminate\Validation\ValidationException) return false;
+            if ($e instanceof \Illuminate\Database\QueryException) return false;
+
+            try {
+                \App\Services\SystemLogger::log('system.error', 'Unhandled exception: ' . class_basename($e), null, [
+                    'message' => $e->getMessage(),
+                    'class' => get_class($e),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ]);
+            } catch (\Throwable $inner) {
+                \Illuminate\Support\Facades\Log::error('SystemLogger failed: ' . $inner->getMessage());
+            }
+            return false;
         });
     })->create();

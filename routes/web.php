@@ -1,23 +1,13 @@
 <?php
 
-/**
- * RUTE WEB — AvaraDesa
- *
- * Halaman portal publik dan area warga (frontend web).
- *
- * Publik (tanpa auth) : beranda, profil desa, informasi, verifikasi QR, statistik
- * Guest (belum login) : login warga (NIK-based)
- * Warga (auth:penduduk): dashboard, profil, keluarga, pengajuan surat & cetak
- *
- * @see \App\Http\Controllers\Web\
- */
-
 use App\Http\Controllers\Web\CitizenAuthController;
 use App\Http\Controllers\Web\CitizenDashboardController;
 use App\Http\Controllers\Web\CitizenFamilyController;
 use App\Http\Controllers\Web\CitizenProfileController;
 use App\Http\Controllers\Web\CitizenSubmissionController;
 use App\Http\Controllers\Web\PublicPortalController;
+use App\Http\Controllers\Admin\NotificationSettingsController;
+use App\Http\Controllers\Admin\NotificationApiController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicPortalController::class, 'home'])->name('home');
@@ -27,7 +17,11 @@ Route::get('/informasi/{slug}', [PublicPortalController::class, 'informationShow
 Route::get('/verifikasi', [PublicPortalController::class, 'verifyIndex'])->name('verify.index');
 Route::get('/verifikasi/{hash}', [PublicPortalController::class, 'verify'])->name('verify');
 Route::get('/fasilitas', [PublicPortalController::class, 'fasilitas'])->name('fasilitas');
+Route::get('/fasilitas/{fasilitas}', [PublicPortalController::class, 'fasilitasShow'])->name('fasilitas.show');
 Route::get('/statistik', [PublicPortalController::class, 'statistik'])->name('statistik');
+Route::post('/aspirasi', [PublicPortalController::class, 'storeAspirasi'])
+    ->middleware('throttle:5,1')
+    ->name('aspirasi.store');
 
 Route::middleware('guest:penduduk')->group(function () {
     Route::get('/login', [CitizenAuthController::class, 'create'])->name('login');
@@ -52,3 +46,12 @@ Route::prefix('warga')
         Route::get('/pengajuan/{pengajuan}', [CitizenSubmissionController::class, 'show'])->name('pengajuan.show');
         Route::get('/pengajuan/{pengajuan}/print', [CitizenSubmissionController::class, 'print'])->name('pengajuan.print');
     });
+
+Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/notifications', NotificationSettingsController::class)->name('notifications');
+    Route::get('/notifications/wa/status', [NotificationApiController::class, 'waStatus'])->name('notifications.wa.status');
+    Route::get('/notifications/wa/qr', [NotificationApiController::class, 'waQr'])->name('notifications.wa.qr');
+    Route::post('/notifications/wa/test', [NotificationApiController::class, 'waTest'])->name('notifications.wa.test');
+    Route::get('/notifications/telegram/status', [NotificationApiController::class, 'tgStatus'])->name('notifications.tg.status');
+    Route::post('/notifications/telegram/broadcast', [NotificationApiController::class, 'tgBroadcast'])->name('notifications.tg.broadcast');
+});

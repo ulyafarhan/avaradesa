@@ -28,9 +28,10 @@
     "dependencies": {
         "@inertiajs/vue3": "^3.4.0",
         "@lucide/vue": "^1.17.0",
+        "@unhead/vue": "^3.2.1",
         "axios": "^1.17.0",
         "dompurify": "^3.4.11",
-        "sweetalert2": "^11.26.25",
+        "qrcode-generator": "^2.0.4",
         "vue": "^3.5.38"
     },
     "overrides": {

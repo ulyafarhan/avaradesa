@@ -15,6 +15,7 @@ namespace Database\Seeders;
 use App\Models\Administrator;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class AdministratorSeeder extends Seeder
 {
@@ -33,23 +34,28 @@ class AdministratorSeeder extends Seeder
         $administrators = [
             [
                 'username' => 'kepala desa',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('kepaladesa789'),
                 'role' => 'kepala_desa',
             ],
             [
                 'username' => 'sekdes',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('sekdes456'),
                 'role' => 'sekdes',
             ],
             [
                 'username' => 'operator',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('operator123'),
                 'role' => 'operator',
             ],
         ];
 
         foreach ($administrators as $admin) {
             Administrator::create($admin);
+        }
+
+        if (isset($this->command)) {
+            $this->command->warn('Password default: kepaladesa789 / sekdes456 / operator123');
+            $this->command->warn('Ubah password setelah login pertama!');
         }
     }
 }

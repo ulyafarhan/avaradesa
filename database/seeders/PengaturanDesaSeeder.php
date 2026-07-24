@@ -96,6 +96,18 @@ class PengaturanDesaSeeder extends Seeder
                 'tipe_data' => 'string',
                 'deskripsi' => 'Nama lengkap Sekretaris Desa',
             ],
+            [
+                'kunci' => 'nama_operator',
+                'nilai' => 'Muhammad Rizal',
+                'tipe_data' => 'string',
+                'deskripsi' => 'Nama operator pelayanan desa',
+            ],
+            [
+                'kunci' => 'no_hp',
+                'nilai' => '6285270001234',
+                'tipe_data' => 'string',
+                'deskripsi' => 'Nomor WhatsApp kantor desa',
+            ],
 
             // Profil Desa
             [
@@ -151,9 +163,27 @@ class PengaturanDesaSeeder extends Seeder
             ],
             [
                 'kunci' => 'nama_bank',
-                'nilai' => 'Bank Kas Daerah',
+                'nilai' => 'Bank Aceh Syariah',
                 'tipe_data' => 'string',
                 'deskripsi' => 'Nama bank kas desa',
+            ],
+            [
+                'kunci' => 'wa_gateway_url',
+                'nilai' => 'http://127.0.0.1:2785',
+                'tipe_data' => 'string',
+                'deskripsi' => 'URL gateway WhatsApp',
+            ],
+            [
+                'kunci' => 'wa_default_target',
+                'nilai' => '6285270001234',
+                'tipe_data' => 'string',
+                'deskripsi' => 'Nomor default untuk notifikasi WhatsApp',
+            ],
+            [
+                'kunci' => 'wa_provider',
+                'nilai' => 'wa-gateway',
+                'tipe_data' => 'string',
+                'deskripsi' => 'Provider WhatsApp (wa-gateway / fonnte)',
             ],
         ];
 

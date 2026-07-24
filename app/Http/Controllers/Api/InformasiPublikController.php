@@ -219,6 +219,9 @@ class InformasiPublikController extends Controller
         ]);
 
         $admin = $request->user();
+        if ($admin->cannot('create', \App\Models\InformasiPublik::class)) {
+            abort(403);
+        }
 
         $informasi = InformasiPublik::create([
             'judul' => $request->judul,
@@ -229,7 +232,7 @@ class InformasiPublikController extends Controller
             'author_id' => $admin->id,
         ]);
 
-        AuditLog::log('admin', $admin->id, 'create', 'informasi_publik', $informasi->id, null, $informasi->toArray());
+        AuditLog::log('admin', $admin->id, 'create', 'informasi_publik', $informasi->id, null, $informasi->only(['id', 'judul', 'kategori', 'status']));
 
         return response()->json([
             'message' => 'Informasi berhasil dibuat',
@@ -283,6 +286,9 @@ class InformasiPublikController extends Controller
 
         $informasi = InformasiPublik::findOrFail($id);
         $admin = $request->user();
+        if ($admin->cannot('update', $informasi)) {
+            abort(403);
+        }
 
         $oldData = $informasi->toArray();
         
@@ -294,7 +300,7 @@ class InformasiPublikController extends Controller
             'is_published',
         ]));
 
-        AuditLog::log('admin', $admin->id, 'update', 'informasi_publik', $informasi->id, $oldData, $informasi->toArray());
+        AuditLog::log('admin', $admin->id, 'update', 'informasi_publik', $informasi->id, collect($oldData)->only(['id', 'judul', 'kategori', 'status'])->toArray(), $informasi->only(['id', 'judul', 'kategori', 'status']));
 
         return response()->json([
             'message' => 'Informasi berhasil diupdate',
@@ -323,11 +329,14 @@ class InformasiPublikController extends Controller
     {
         $informasi = InformasiPublik::findOrFail($id);
         $admin = request()->user();
+        if ($admin->cannot('delete', $informasi)) {
+            abort(403);
+        }
 
         $oldData = $informasi->toArray();
         $informasi->delete();
 
-        AuditLog::log('admin', $admin->id, 'delete', 'informasi_publik', $id, $oldData, null);
+        AuditLog::log('admin', $admin->id, 'delete', 'informasi_publik', $id, collect($oldData)->only(['id', 'judul', 'kategori', 'status'])->toArray(), null);
 
         return response()->json([
             'message' => 'Informasi berhasil dihapus',

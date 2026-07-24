@@ -20,6 +20,7 @@ const form = useForm({
     pendidikan: props.warga.pendidikan || '',
     pekerjaan: props.warga.pekerjaan || '',
     status_perkawinan: props.warga.status_perkawinan || '',
+    no_hp: props.warga.no_hp || '',
     telegram_chat_id: props.warga.telegram_chat_id || '',
     foto_profil: null,
     foto_ktp: null,
@@ -233,6 +234,10 @@ const getInitials = (name) => {
                     <p class="body-md mt-0.5 font-medium" :class="warga.status_perkawinan ? 'text-neutral' : 'text-error'">{{ warga.status_perkawinan || 'Belum diisi' }}</p>
                 </div>
                 <div class="data-item">
+                    <span class="overline-label">No. HP / WhatsApp</span>
+                    <p class="body-md text-neutral font-medium mt-0.5">{{ warga.no_hp || 'Belum diisi' }}</p>
+                </div>
+                <div class="data-item">
                     <span class="overline-label">Telegram Chat ID</span>
                     <p class="body-md text-neutral font-medium mt-0.5">{{ warga.telegram_chat_id || 'Belum terhubung' }}</p>
                 </div>
@@ -265,6 +270,15 @@ const getInitials = (name) => {
                             label="Status Perkawinan"
                             :options="statusPerkawinanOptions"
                             :error="form.errors.status_perkawinan"
+                        />
+                    </div>
+                    <div class="input-wrapper">
+                        <FormInput
+                            id="no_hp"
+                            v-model="form.no_hp"
+                            label="No. HP / WhatsApp"
+                            placeholder="08xxxxxxxxxx"
+                            :error="form.errors.no_hp"
                         />
                     </div>
                     <div class="input-wrapper">

@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Support\Str;
 use App\Jobs\SendNewsTelegramNotificationJob;
@@ -29,7 +31,7 @@ use App\Jobs\SendNewsWhatsappNotificationJob;
  */
 class InformasiPublik extends Model
 {
-    use HasUlids;
+    use HasFactory, HasUlids, SoftDeletes;
 
     /**
      * Nama tabel database yang terhubung dengan model ini.

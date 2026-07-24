@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\InventarisFasilitasResource\Pages;
 use App\Models\InventarisFasilitas;
+use App\Services\SystemLogger;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -33,11 +34,11 @@ class InventarisFasilitasResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-building-office';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Pengaturan';
+    protected static string|\UnitEnum|null $navigationGroup = 'Informasi Desa';
 
     protected static ?string $navigationLabel = 'Inventaris Fasilitas';
 
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 6;
 
     public static function form(Schema $schema): Schema
     {
@@ -185,8 +186,29 @@ class InventarisFasilitasResource extends Resource
                         'Rusak Berat' => 'Rusak Berat',
                     ]),
             ])
-            ->headerActions([CreateAction::make()])
-            ->recordActions([EditAction::make(), DeleteAction::make()])
+            ->headerActions([
+                CreateAction::make()
+                    ->mutateFormDataUsing(function (array $data): array {
+                        if (!empty($data['foto'])) {
+                            SystemLogger::log('file.uploaded', 'Foto fasilitas diunggah', null, [
+                                'nama_fasilitas' => $data['nama_fasilitas'] ?? '',
+                            ]);
+                        }
+                        return $data;
+                    }),
+            ])
+            ->recordActions([
+                EditAction::make()
+                    ->mutateFormDataUsing(function (array $data): array {
+                        if (!empty($data['foto'])) {
+                            SystemLogger::log('file.uploaded', 'Foto fasilitas diperbarui', null, [
+                                'nama_fasilitas' => $data['nama_fasilitas'] ?? '',
+                            ]);
+                        }
+                        return $data;
+                    }),
+                DeleteAction::make(),
+            ])
             ->actionsColumnLabel('Aksi')
             ->defaultSort('created_at', 'desc')
             ->striped()

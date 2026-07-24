@@ -12,10 +12,10 @@ use Tests\TestCase;
 
 class TelegramWebhookTest extends TestCase
 {
-    protected function tearDown(): void
+    protected function setUp(): void
     {
-        Mockery::close();
-        parent::tearDown();
+        parent::setUp();
+        config(['services.telegram.webhook_secret' => 'test-secret']);
     }
 
     public function test_it_handles_start_command_correctly()
@@ -25,7 +25,9 @@ class TelegramWebhookTest extends TestCase
             $mock->shouldReceive('setWebhook')->andReturn(true);
         }));
 
-        $response = $this->postJson('/api/v1/telegram/webhook', [
+        $response = $this->withHeaders([
+            'X-Telegram-Bot-Api-Secret-Token' => 'test-secret',
+        ])->postJson('/api/v1/telegram/webhook', [
             'message' => [
                 'text' => '/start',
                 'chat' => ['id' => 12345],
@@ -48,7 +50,9 @@ class TelegramWebhookTest extends TestCase
             $mock->shouldReceive('setWebhook')->andReturn(true);
         }));
 
-        $response = $this->postJson('/api/v1/telegram/webhook', [
+        $response = $this->withHeaders([
+            'X-Telegram-Bot-Api-Secret-Token' => 'test-secret',
+        ])->postJson('/api/v1/telegram/webhook', [
             'message' => [
                 'text' => '/bind ' . $warga->nik,
                 'chat' => ['id' => 12345],
@@ -61,11 +65,14 @@ class TelegramWebhookTest extends TestCase
 
     public function test_it_returns_empty_for_unknown_commands()
     {
+        \Illuminate\Support\Facades\Queue::fake();
         $this->instance(TelegramService::class, Mockery::mock(TelegramService::class, function ($mock) {
             $mock->shouldReceive('setWebhook')->andReturn(true);
         }));
 
-        $response = $this->postJson('/api/v1/telegram/webhook', [
+        $response = $this->withHeaders([
+            'X-Telegram-Bot-Api-Secret-Token' => 'test-secret',
+        ])->postJson('/api/v1/telegram/webhook', [
             'message' => [
                 'text' => '/unknown_command',
                 'chat' => ['id' => 12345],
@@ -93,7 +100,9 @@ class TelegramWebhookTest extends TestCase
             $mock->shouldReceive('setWebhook')->andReturn(true);
         }));
 
-        $response = $this->postJson('/api/v1/telegram/webhook', [
+        $response = $this->withHeaders([
+            'X-Telegram-Bot-Api-Secret-Token' => 'test-secret',
+        ])->postJson('/api/v1/telegram/webhook', [
             'message' => [
                 'text' => 'bagaimana cara buat sktm?',
                 'chat' => ['id' => 12345],
@@ -106,13 +115,16 @@ class TelegramWebhookTest extends TestCase
 
     public function test_it_enforces_rate_limits_for_ai_questions()
     {
+        \Illuminate\Support\Facades\Queue::fake();
         $this->instance(TelegramService::class, Mockery::mock(TelegramService::class, function ($mock) {
             $mock->shouldReceive('sendMessage')->times(6);
             $mock->shouldReceive('setWebhook')->andReturn(true);
         }));
 
         for ($i = 0; $i < 15; $i++) {
-            $this->postJson('/api/v1/telegram/webhook', [
+            $this->withHeaders([
+                'X-Telegram-Bot-Api-Secret-Token' => 'test-secret',
+            ])->postJson('/api/v1/telegram/webhook', [
                 'message' => [
                     'text' => 'pertanyaan random ' . $i,
                     'chat' => ['id' => 99999],
@@ -121,7 +133,9 @@ class TelegramWebhookTest extends TestCase
             ]);
         }
 
-        $response = $this->postJson('/api/v1/telegram/webhook', [
+        $response = $this->withHeaders([
+            'X-Telegram-Bot-Api-Secret-Token' => 'test-secret',
+        ])->postJson('/api/v1/telegram/webhook', [
             'message' => [
                 'text' => 'pertanyaan ke-16',
                 'chat' => ['id' => 99999],
@@ -145,8 +159,8 @@ class TelegramWebhookTest extends TestCase
             ],
         ]);
 
-        $response->assertStatus(403)
-            ->assertJson(['error' => 'Unauthorized']);
+        $response->assertStatus(401)
+            ->assertJson(['message' => 'Invalid webhook secret']);
     }
 
     public function test_callback_query_processing()
@@ -155,7 +169,9 @@ class TelegramWebhookTest extends TestCase
             $mock->shouldReceive('sendMessage')->with(12345, 'Callback received: test_data')->once();
         }));
 
-        $response = $this->postJson('/api/v1/telegram/webhook', [
+        $response = $this->withHeaders([
+            'X-Telegram-Bot-Api-Secret-Token' => 'test-secret',
+        ])->postJson('/api/v1/telegram/webhook', [
             'callback_query' => [
                 'data' => 'test_data',
                 'message' => [
@@ -176,7 +192,9 @@ class TelegramWebhookTest extends TestCase
                 ->once();
         }));
 
-        $response = $this->postJson('/api/v1/telegram/webhook', [
+        $response = $this->withHeaders([
+            'X-Telegram-Bot-Api-Secret-Token' => 'test-secret',
+        ])->postJson('/api/v1/telegram/webhook', [
             'message' => [
                 'text' => '/bind',
                 'chat' => ['id' => 12345],
@@ -192,7 +210,9 @@ class TelegramWebhookTest extends TestCase
             $mock->shouldNotReceive('sendMessage');
         }));
 
-        $response = $this->postJson('/api/v1/telegram/webhook', [
+        $response = $this->withHeaders([
+            'X-Telegram-Bot-Api-Secret-Token' => 'test-secret',
+        ])->postJson('/api/v1/telegram/webhook', [
             'message' => [
                 'text' => '   ',
                 'chat' => ['id' => 12345],

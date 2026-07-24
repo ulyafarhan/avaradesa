@@ -2,6 +2,8 @@
 
 namespace App\Filament\Auth;
 
+use App\Services\SystemLogger;
+use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Filament\Auth\Pages\Login;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Component;
@@ -71,6 +73,20 @@ class AdminLogin extends Login
      *
      * @throws ValidationException Selalu dilemparkan dengan pesan error yang telah ditentukan.
      */
+    public function authenticate(): ?LoginResponse
+    {
+        $username = $this->getFormState()['username'] ?? 'unknown';
+
+        try {
+            $result = parent::authenticate();
+            SystemLogger::log('auth.login', "Admin login berhasil: $username");
+            return $result;
+        } catch (ValidationException $e) {
+            SystemLogger::log('auth.login.failed', "Admin login gagal: $username");
+            throw $e;
+        }
+    }
+
     protected function throwFailureValidationException(): never
     {
         throw ValidationException::withMessages([

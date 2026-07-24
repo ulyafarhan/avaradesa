@@ -20,7 +20,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 /**
- * Resource Filament untuk mengelola data basis pengetahuan chatbot Telegram.
+ * Resource Filament untuk mengelola data basis pengetahuan chatbot.
  */
 class BotKnowledgeResource extends Resource
 {
@@ -37,9 +37,9 @@ class BotKnowledgeResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Pengaturan';
 
-    protected static ?string $navigationLabel = 'Tanya Jawab Bot Telegram';
+    protected static ?string $navigationLabel = 'Bot Pengetahuan';
 
-    protected static ?int $navigationSort = 9;
+    protected static ?int $navigationSort = 11;
 
     /**
      * Membangun form isian data basis pengetahuan bot.
@@ -48,7 +48,7 @@ class BotKnowledgeResource extends Resource
     {
         return $schema->components([
             Section::make('Panduan & Basis Pengetahuan Bot')
-                ->description('Kelola daftar tanya jawab otomatis (FAQ) dan data pendukung untuk kecerdasan buatan (AI) Bot Telegram Desa.')
+                ->description('Kelola daftar tanya jawab otomatis (FAQ) dan data pendukung untuk kecerdasan buatan (AI) Bot Desa.')
                 ->icon('heroicon-o-chat-bubble-left-right')
                 ->schema([
                     TextInput::make('kunci')
@@ -80,7 +80,7 @@ class BotKnowledgeResource extends Resource
                         ->dehydrateStateUsing(fn ($state) => is_array($state) ? $state : array_map('trim', explode(',', $state)))
                         ->formatStateUsing(fn ($state) => is_array($state) ? implode(', ', $state) : $state)
                         ->prefixIcon('heroicon-o-tag')
-                        ->helperText('Kata-kata yang sering diketik warga di Telegram untuk memicu jawaban ini.'),
+                        ->helperText('Kata-kata yang sering diketik warga untuk memicu jawaban ini.'),
                     Textarea::make('jawaban_atau_konten')
                         ->label('Isi Jawaban / Penjelasan Informasi')
                         ->required()

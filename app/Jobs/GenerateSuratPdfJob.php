@@ -6,6 +6,7 @@ use App\Models\PengajuanSurat;
 use App\Models\TrackingPengajuanSurat;
 use App\Services\PdfGeneratorService;
 use App\Services\TelegramService;
+use App\Services\WhatsAppService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -45,7 +46,8 @@ class GenerateSuratPdfJob implements ShouldQueue
      */
     public function handle(
         PdfGeneratorService $pdfService,
-        TelegramService $telegram
+        TelegramService $telegram,
+        WhatsAppService $whatsapp
     ): void {
         try {
             if (empty($this->pengajuan->qr_hash)) {
@@ -108,7 +110,25 @@ class GenerateSuratPdfJob implements ShouldQueue
                 );
             }
 
+            if ($pemohon && $pemohon->no_hp) {
+                $message = "Surat Anda telah selesai!\n\n";
+                $message .= "Nomor: {$this->pengajuan->nomor_registrasi}\n";
+                $message .= "Jenis: {$this->pengajuan->kategori->nama_surat}\n\n";
+                $message .= "Anda dapat melihat di: " . config('app.url') . "/warga/dashboard?tab=pengajuan";
+
+                $whatsapp->sendMessage(
+                    $pemohon->no_hp,
+                    $message
+                );
+            }
+
             $telegram->notifyPengajuanStatus(
+                $this->pengajuan->nik_pemohon,
+                'Selesai',
+                $this->pengajuan->nomor_registrasi
+            );
+
+            $whatsapp->notifyPengajuanStatus(
                 $this->pengajuan->nik_pemohon,
                 'Selesai',
                 $this->pengajuan->nomor_registrasi
@@ -133,9 +153,6 @@ class GenerateSuratPdfJob implements ShouldQueue
      */
     public function failed(\Throwable $e): void
     {
-        $this->pengajuan->update([
-            'status' => 'Ditolak',
-            'catatan_penolakan' => 'Gagal memproses surat: ' . $e->getMessage(),
-        ]);
+        Log::error("GenerateSuratPdfJob gagal total untuk pengajuan #{$this->pengajuan->id}: " . $e->getMessage());
     }
 }

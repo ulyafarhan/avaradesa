@@ -5,7 +5,7 @@ return [
         [
             'app_id' => env('REVERB_APP_ID', 'avaradesa'),
             'key' => env('REVERB_APP_KEY', 'avaradesa-key'),
-            'secret' => env('REVERB_APP_SECRET', 'avaradesa-secret'),
+            'secret' => env('REVERB_APP_SECRET'),
             'host' => env('REVERB_HOST', 'localhost'),
             'port' => env('REVERB_PORT', 8080),
             'scheme' => env('REVERB_SCHEME', 'http'),

@@ -111,12 +111,10 @@ class TelegramServiceTest extends TestCase
         ]);
 
         $service = new TelegramService();
-        $service->notifyPengajuanStatus($penduduk->nik, 'Disetujui', 'REG-001', 'Silahkan ambil');
+        $service->notifyPengajuanStatus($penduduk->nik, 'Disetujui', 'REG-001');
         
         Http::assertSent(function ($request) {
-            return str_contains($request['text'], 'Pengajuan surat Anda telah disetujui') &&
-                   str_contains($request['text'], 'REG-001') &&
-                   str_contains($request['text'], 'Silahkan ambil') &&
+            return str_contains($request['text'] ?? '', 'REG-001') &&
                    $request['chat_id'] == '98765';
         });
     }

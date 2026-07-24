@@ -34,7 +34,7 @@ class SendNewsTelegramNotificationJobTest extends TestCase
                      return str_contains($msg, 'BERITA & PENGUMUMAN DESA') &&
                             str_contains($msg, 'Berita Desa Baru') &&
                             str_contains($msg, '#KesehatanMasyarakat') &&
-                            str_contains($msg, 'Baca Selengkapnya di AvaraDesa');
+                            str_contains($msg, 'Baca Selengkapnya di SIG-Udeung');
                  }))
                  ->andReturn(true);
         });

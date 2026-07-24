@@ -7,6 +7,7 @@ use App\Models\MutasiPenduduk;
 use App\Models\Penduduk;
 use App\Models\AuditLog;
 use App\Services\TelegramService;
+use App\Services\WhatsAppService;
 use App\Services\StatistikService;
 use Illuminate\Http\Request;
 
@@ -22,6 +23,7 @@ class MutasiPendudukController extends Controller
      */
     public function __construct(
         protected TelegramService $telegram,
+        protected WhatsAppService $whatsapp,
         protected StatistikService $statistik
     ) {}
 
@@ -63,10 +65,15 @@ class MutasiPendudukController extends Controller
         $request->validate([
             'nik' => 'required|exists:penduduk,nik',
             'jenis_mutasi' => 'required|in:Kelahiran,Kematian,Kedatangan,Kepindahan',
-            'tanggal_mutasi' => 'required|date',
+            'tanggal_mutasi' => 'required|date|before_or_equal:today',
             'keterangan' => 'required|string',
             'dokumen_bukti' => 'required|string',
         ]);
+
+        $user = $request->user();
+        if ($user instanceof \App\Models\Penduduk && $user->nik !== $request->nik) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
 
         $user = $request->user();
 
@@ -79,9 +86,14 @@ class MutasiPendudukController extends Controller
             'status_verifikasi' => 'Pending',
         ]);
 
-        AuditLog::log('warga', $user->nik, 'create', 'mutasi_penduduk', $mutasi->id, null, $mutasi->toArray());
+        AuditLog::log('warga', $user->nik, 'create', 'mutasi_penduduk', $mutasi->id, null, $mutasi->only(['id', 'nik', 'jenis_mutasi', 'status_verifikasi']));
 
         $this->telegram->notifyMutasiStatus(
+            $request->nik,
+            $request->jenis_mutasi,
+            'Pending'
+        );
+        $this->whatsapp->notifyMutasiStatus(
             $request->nik,
             $request->jenis_mutasi,
             'Pending'
@@ -223,6 +235,12 @@ class MutasiPendudukController extends Controller
     public function approve(Request $request, $id)
     {
         $mutasi = MutasiPenduduk::findOrFail($id);
+        $this->authorize('approve', $mutasi);
+        
+        if ($mutasi->status_verifikasi !== 'Pending') {
+            return response()->json(['message' => 'Status tidak valid'], 422);
+        }
+
         $admin = $request->user();
 
         $mutasi->update([
@@ -243,6 +261,11 @@ class MutasiPendudukController extends Controller
         $this->statistik->clearCache();
 
         $this->telegram->notifyMutasiStatus(
+            $mutasi->nik,
+            $mutasi->jenis_mutasi,
+            'Disetujui'
+        );
+        $this->whatsapp->notifyMutasiStatus(
             $mutasi->nik,
             $mutasi->jenis_mutasi,
             'Disetujui'
@@ -284,6 +307,12 @@ class MutasiPendudukController extends Controller
     public function reject(Request $request, $id)
     {
         $mutasi = MutasiPenduduk::findOrFail($id);
+        $this->authorize('reject', $mutasi);
+        
+        if ($mutasi->status_verifikasi !== 'Pending') {
+            return response()->json(['message' => 'Status tidak valid'], 422);
+        }
+
         $admin = $request->user();
 
         $mutasi->update([
@@ -294,6 +323,11 @@ class MutasiPendudukController extends Controller
         AuditLog::log('admin', $admin->id, 'reject', 'mutasi_penduduk', $mutasi->id);
 
         $this->telegram->notifyMutasiStatus(
+            $mutasi->nik,
+            $mutasi->jenis_mutasi,
+            'Ditolak'
+        );
+        $this->whatsapp->notifyMutasiStatus(
             $mutasi->nik,
             $mutasi->jenis_mutasi,
             'Ditolak'

@@ -9,9 +9,28 @@ use App\Models\Penduduk;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SyncController extends Controller
 {
+    private function validateOperationData(string $type, array $data): array
+    {
+        $rules = match ($type) {
+            'pengajuan_surat' => [
+                'kategori_surat_id' => 'required|string|exists:kategori_surat,id',
+                'data_isian' => 'required|array',
+            ],
+            'mutasi' => [
+                'jenis_mutasi' => 'required|in:Pindah,Datang,Meninggal',
+                'tanggal_mutasi' => 'required|date',
+                'alasan' => 'nullable|string|max:1000',
+            ],
+            default => throw new \InvalidArgumentException("Unknown type: $type"),
+        };
+        
+        return validator($data, $rules)->validate();
+    }
+
     /**
      * Pull Sync Data
      *
@@ -83,6 +102,7 @@ class SyncController extends Controller
 
         foreach ($request->input('operations') as $op) {
             try {
+                $this->validateOperationData($op['type'], $op['data']);
                 DB::beginTransaction();
 
                 if ($op['type'] === 'pengajuan_surat' && $op['action'] === 'create') {
@@ -90,6 +110,7 @@ class SyncController extends Controller
                         'nik_pemohon' => $nik,
                         'kategori_surat_id' => $op['data']['kategori_surat_id'] ?? 1,
                         'data_isian' => $op['data']['data_isian'] ?? [],
+                        'file_syarat' => $op['data']['file_syarat'] ?? [],
                         'status' => 'Pending',
                     ]);
 
@@ -104,6 +125,7 @@ class SyncController extends Controller
                         'jenis_mutasi' => $op['data']['jenis_mutasi'] ?? '',
                         'tanggal_mutasi' => $op['data']['tanggal_mutasi'] ?? now(),
                         'keterangan' => $op['data']['alasan'] ?? '',
+                        'dokumen_bukti' => $op['data']['dokumen_bukti'] ?? '',
                         'status_verifikasi' => 'Pending',
                     ]);
 
@@ -117,10 +139,14 @@ class SyncController extends Controller
                 DB::commit();
             } catch (\Throwable $e) {
                 DB::rollBack();
+                Log::warning('Sync operation failed: ' . $e->getMessage(), [
+                    'client_id' => $op['client_id'],
+                    'type' => $op['type'],
+                ]);
                 $results[] = [
                     'client_id' => $op['client_id'],
                     'status' => 'error',
-                    'message' => $e->getMessage(),
+                    'message' => 'Gagal memproses operasi.',
                 ];
             }
         }

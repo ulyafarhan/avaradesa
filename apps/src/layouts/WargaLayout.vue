@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/authStore'
 import DarkModeToggle from '../components/DarkModeToggle.vue'
@@ -7,6 +7,11 @@ import DarkModeToggle from '../components/DarkModeToggle.vue'
 const route  = useRoute()
 const router = useRouter()
 const auth   = useAuthStore()
+
+// ponytail: skeleton — track route transitions
+const isLoading = ref(false)
+router.beforeEach(() => { isLoading.value = true })
+router.afterEach(() => { setTimeout(() => { isLoading.value = false }, 150) })
 
 // ── Navigation tabs ─────────────────────────────────────────────────────────
 const tabs = [
@@ -115,11 +120,19 @@ const initials = computed(() => {
       class="flex-1 z-10 relative max-w-screen-sm mx-auto w-full"
       style="padding: 16px 16px 100px;"
     >
-      <router-view v-slot="{ Component }">
-        <transition name="page" mode="out-in">
-          <component :is="Component" />
-        </transition>
-      </router-view>
+      <Transition name="skeleton-fade" mode="out-in">
+        <div v-if="isLoading" class="space-y-4">
+          <div class="mobile-skeleton h-7 w-1/3 rounded-lg"></div>
+          <div class="mobile-skeleton h-4 w-2/3 rounded"></div>
+          <div class="mobile-skeleton h-32 rounded-2xl"></div>
+          <div class="mobile-skeleton h-20 rounded-2xl"></div>
+        </div>
+        <router-view v-else v-slot="{ Component }">
+          <transition name="page" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
+      </Transition>
     </main>
 
     <!-- ── Bottom Navigation ─────────────────────────────────────────────── -->
@@ -166,3 +179,18 @@ const initials = computed(() => {
     </nav>
   </div>
 </template>
+
+<style>
+/* ponytail: skeleton shimmer for mobile */
+.mobile-skeleton {
+  background: linear-gradient(90deg, var(--clr-surface-dim, #e5e7eb) 25%, var(--clr-surface, #f3f4f6) 37%, var(--clr-surface-dim, #e5e7eb) 63%);
+  background-size: 400% 100%;
+  animation: mobile-shimmer 1.4s ease infinite;
+}
+@keyframes mobile-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+.skeleton-fade-enter-active, .skeleton-fade-leave-active { transition: opacity 0.15s ease; }
+.skeleton-fade-enter-from, .skeleton-fade-leave-to { opacity: 0; }
+</style>

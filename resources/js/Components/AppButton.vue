@@ -1,5 +1,6 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
+import LoadingSpinner from './LoadingSpinner.vue';
 
 const props = defineProps({
     href: String,
@@ -20,11 +21,11 @@ const variants = {
 
 <template>
     <Link v-if="href" :href="href" :class="[base, variants[variant]]">
-        <span v-if="loading" class="size-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
+        <LoadingSpinner v-if="loading" />
         <slot />
     </Link>
     <button v-else :type="type" :disabled="loading" :class="[base, variants[variant]]">
-        <span v-if="loading" class="size-4 animate-spin rounded-full border-2 border-current border-r-transparent" />
+        <LoadingSpinner v-if="loading" />
         <slot />
     </button>
 </template>

@@ -16,6 +16,11 @@ class AddCacheControlHeaders
             throw $e;
         }
 
+        if ($request->is('api/*')) {
+            $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+            return $response;
+        }
+
         if (!$request->isMethod('GET') && !$request->isMethod('HEAD')) {
             return $response;
         }

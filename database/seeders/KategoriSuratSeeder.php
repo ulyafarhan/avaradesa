@@ -60,6 +60,7 @@ class KategoriSuratSeeder extends Seeder
                     'Foto Tempat Usaha',
                     'Kartu Keluarga',
                 ],
+                'body_content' => 'Bahwa yang bersangkutan benar memiliki dan menjalankan usaha di Desa {nama_desa}, Kecamatan {kecamatan}, Kabupaten {kabupaten}. Usaha tersebut telah berjalan dengan baik dan menjadi salah satu sumber pendapatan utama keluarga. Surat keterangan ini dibuat untuk keperluan pengajuan dokumen administrasi dan perizinan usaha di instansi terkait.',
                 'is_active' => true,
             ],
 
@@ -98,7 +99,9 @@ class KategoriSuratSeeder extends Seeder
                 'syarat_dokumen' => [
                     'KTP Asli dan Fotokopi',
                     'Kartu Keluarga',
+                    'Surat Pengantar dari Kepala Desa (jika lintas desa/kelurahan)',
                 ],
+                'body_content' => 'Bahwa yang bersangkutan benar berdomisili dan bertempat tinggal tetap di Desa {nama_desa}, Kecamatan {kecamatan}, Kabupaten {kabupaten}. Selama tinggal di desa ini, yang bersangkutan telah dikenal oleh masyarakat sekitar dan berkelakuan baik. Surat keterangan ini dibuat untuk keperluan administrasi kependudukan.',
                 'is_active' => true,
             ],
 
@@ -139,6 +142,7 @@ class KategoriSuratSeeder extends Seeder
                     'Foto Kondisi Rumah Depan & Dalam',
                     'Surat Pernyataan Tidak Mampu dari Tetangga',
                 ],
+                'body_content' => 'Bahwa yang bersangkutan benar warga kurang mampu dari segi ekonomi. Penghasilan kepala keluarga sehari-hari tidak mencukupi untuk memenuhi kebutuhan pokok rumah tangga. Dengan kondisi ekonomi yang demikian, yang bersangkutan tergolong keluarga TIDAK MAMPU dan layak mendapatkan bantuan. Surat ini dibuat untuk keperluan pengajuan bantuan sosial dan/atau keringanan biaya pendidikan.',
                 'is_active' => true,
             ],
 
@@ -198,6 +202,7 @@ class KategoriSuratSeeder extends Seeder
                     'Kartu Keluarga',
                     'Buku Nikah / Akta Perkawinan',
                 ],
+                'body_content' => 'Bahwa di Desa {nama_desa}, Kecamatan {kecamatan}, Kabupaten {kabupaten}, telah lahir seorang anak ke {anak_ke} dari pasangan suami istri tersebut di atas. Kelahiran ini disaksikan oleh bidan desa dan telah dilaporkan oleh orang tua kepada perangkat desa setempat. Surat keterangan ini dibuat untuk pengurusan akta kelahiran dan pencatatan administrasi kependudukan di Dinas Kependudukan dan Pencatatan Sipil.',
                 'is_active' => true,
             ],
 
@@ -245,6 +250,7 @@ class KategoriSuratSeeder extends Seeder
                     'Kartu Keluarga',
                     'KTP Pelapor',
                 ],
+                'body_content' => 'Bahwa benar telah meninggal dunia di Desa {nama_desa}, Kecamatan {kecamatan}, Kabupaten {kabupaten} pada hari dan tanggal sebagaimana disebutkan di atas. Jenazah telah dimakamkan di pemakaman umum desa setempat. Surat keterangan ini dibuat untuk pengurusan administrasi kependudukan, penghentian bantuan sosial, dan/atau keperluan ahli waris.',
                 'is_active' => true,
             ],
 
@@ -280,6 +286,7 @@ class KategoriSuratSeeder extends Seeder
                     'Fotokopi Akta Kelahiran / Ijazah Terakhir',
                     'Pas Foto 4x6 Background Merah',
                 ],
+                'body_content' => 'Bahwa yang bersangkutan berkelakuan baik, sopan santun dalam pergaulan sehari-hari, dan tidak pernah terlibat dalam tindak pidana maupun pelanggaran hukum lainnya. Surat pengantar ini dibuat sebagai syarat pengurusan Surat Keterangan Catatan Kepolisian (SKCK) di Kepolisian Resor setempat untuk keperluan sebagaimana disebutkan di atas.',
                 'is_active' => true,
             ],
 
@@ -306,7 +313,9 @@ class KategoriSuratSeeder extends Seeder
                     'KTP Asli dan Fotokopi',
                     'Kartu Keluarga',
                     'Surat Pernyataan dari Orang Tua',
+                    'Pas Foto 3x4 (2 lembar)',
                 ],
+                'body_content' => 'Bahwa yang bersangkutan benar berstatus LAJANG dan belum pernah menikah menurut hukum agama Islam maupun hukum negara yang berlaku. Sepanjang pengetahuan perangkat desa dan masyarakat setempat, yang bersangkutan tidak terikat hubungan pernikahan dengan siapa pun. Surat keterangan ini dibuat untuk keperluan persyaratan administrasi dan/atau rencana pernikahan.',
                 'is_active' => true,
             ],
 
@@ -356,8 +365,10 @@ class KategoriSuratSeeder extends Seeder
                 'syarat_dokumen' => [
                     'KTP Asli dan Fotokopi',
                     'Kartu Keluarga',
-                    'Surat Pengantar dari Desa Tujuan',
+                    'Surat Keterangan dari Desa Tujuan (jika ada)',
+                    'Akte Kelahiran Anak (jika membawa anak)',
                 ],
+                'body_content' => 'Bahwa yang bersangkutan benar akan pindah tempat tinggal dari Desa {nama_desa}, Kecamatan {kecamatan}, Kabupaten {kabupaten} ke tempat tujuan sebagaimana disebutkan di atas. Selama berdomisili di desa ini, yang bersangkutan berkelakuan baik dan tidak memiliki tunggakan kewajiban kepada desa. Surat keterangan ini dibuat untuk pengurusan administrasi kependudukan di desa tujuan.',
                 'is_active' => true,
             ],
 
@@ -410,8 +421,10 @@ class KategoriSuratSeeder extends Seeder
                     'Akta Kelahiran',
                     'Surat Keterangan Belum Menikah',
                     'Pas Foto 2x6 Background Biru',
-                    'Surat Izin Orang Tua (jika belum 21 tahun)',
+                    'Surat Izin Orang Tua/Wali (jika belum 21 tahun)',
+                    'Surat Rekomendasi dari Kepala Desa (untuk nikah di luar KUA)',
                 ],
+                'body_content' => 'Bahwa kedua calon mempelai tersebut di atas benar warga Desa {nama_desa}, Kecamatan {kecamatan}, Kabupaten {kabupaten} dan telah memenuhi syarat untuk melaksanakan pernikahan menurut agama Islam dan peraturan perundang-undangan yang berlaku. Tidak ada halangan syar\'i maupun hukum untuk melangsungkan pernikahan. Surat pengantar ini dibuat untuk keperluan pencatatan pernikahan di Kantor Urusan Agama (KUA) Kecamatan {kecamatan}.',
                 'is_active' => true,
             ],
 
@@ -443,14 +456,19 @@ class KategoriSuratSeeder extends Seeder
                 'syarat_dokumen' => [
                     'KTP Asli dan Fotokopi',
                     'Kartu Keluarga',
-                    'Surat Keterangan Usaha (jika pedagang)',
+                    'Surat Keterangan Usaha (jika pedagang/pengusaha)',
+                    'Slip Gaji (jika karyawan)',
                 ],
+                'body_content' => 'Bahwa yang bersangkutan benar memiliki penghasilan tetap sebagai warga Desa {nama_desa}, Kecamatan {kecamatan}, Kabupaten {kabupaten}. Penghasilan tersebut diperoleh dari pekerjaan/usaha yang dijalani secara sah dan halal. Surat keterangan ini dibuat untuk keperluan administrasi dan pengajuan dokumen perbankan maupun instansi terkait.',
                 'is_active' => true,
             ],
         ];
 
         foreach ($kategoriSurat as $kategori) {
-            KategoriSurat::create($kategori);
+            KategoriSurat::updateOrCreate(
+                ['kode_surat' => $kategori['kode_surat']],
+                $kategori
+            );
         }
     }
 }

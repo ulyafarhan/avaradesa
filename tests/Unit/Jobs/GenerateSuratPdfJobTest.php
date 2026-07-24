@@ -9,6 +9,7 @@ use App\Models\PengajuanSurat;
 use App\Models\TrackingPengajuanSurat;
 use App\Services\PdfGeneratorService;
 use App\Services\TelegramService;
+use App\Services\WhatsAppService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
@@ -51,8 +52,14 @@ class GenerateSuratPdfJobTest extends TestCase
                  ->with(\Mockery::type('string'), 'Selesai', 'REG-001');
         });
 
+        $whatsappService = $this->mock(WhatsAppService::class, function (MockInterface $mock) {
+            $mock->shouldReceive('notifyPengajuanStatus')
+                 ->once()
+                 ->with(\Mockery::type('string'), 'Selesai', \Mockery::type('string'));
+        });
+
         $job = new GenerateSuratPdfJob($pengajuan);
-        $job->handle($pdfService, $telegramService);
+        $job->handle($pdfService, $telegramService, $whatsappService);
 
         $pengajuan->refresh();
         $this->assertEquals('Selesai', $pengajuan->status);

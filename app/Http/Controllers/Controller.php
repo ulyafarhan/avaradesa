@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
 /**
  * Kelas dasar controller untuk aplikasi web.
  *
@@ -11,4 +13,13 @@ namespace App\Http\Controllers;
  */
 abstract class Controller
 {
+    use AuthorizesRequests;
+
+    protected function requireAdminRole(array $roles = ['kepala_desa', 'sekdes']): void
+    {
+        $user = auth()->user();
+        if (!$user || !in_array($user->role, $roles)) {
+            abort(403, 'Hanya kepala desa dan sekretaris desa yang dapat melakukan operasi ini.');
+        }
+    }
 }

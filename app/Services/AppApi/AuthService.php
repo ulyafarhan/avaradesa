@@ -2,18 +2,18 @@
 
 namespace App\Services\AppApi;
 
-use App\Contracts\AppApi\TokenServiceInterface;
 use App\Models\Administrator;
 use App\Models\AuditLog;
 use App\Models\Penduduk;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
 /**
  * Business logic untuk autentikasi App API.
  */
-class AuthService implements TokenServiceInterface
+class AuthService
 {
     // ── Token management ────────────────────────────────────────────
 
@@ -63,16 +63,23 @@ class AuthService implements TokenServiceInterface
      *
      * @return array{token: string, user: Administrator}
      */
-    public function loginAdmin(string $username, string $password): array
+    public function loginAdmin(string $username, string $password, string $ip): array
     {
+        $key = 'app_admin_login_ip:' . $ip;
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            abort(429, 'Terlalu banyak percobaan login. Coba lagi dalam 15 menit.');
+        }
+
         $admin = Administrator::where('username', $username)->first();
 
         if (! $admin || ! Hash::check($password, $admin->password)) {
+            RateLimiter::hit($key, 15 * 60);
             throw ValidationException::withMessages([
                 'username' => ['Username atau password salah.'],
             ]);
         }
 
+        RateLimiter::clear($key);
         $token = $this->createAdminToken($admin);
 
         AuditLog::log('admin', $admin->id, 'login_app', 'administrators', $admin->id);

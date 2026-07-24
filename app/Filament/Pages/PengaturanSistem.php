@@ -17,6 +17,7 @@ use Filament\Schemas\Schema;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Artisan;
+use App\Services\SystemLogger;
 
 /**
  * Halaman kustom Filament untuk mengelola pengaturan sistem terintegrasi.
@@ -60,7 +61,7 @@ class PengaturanSistem extends Page implements HasForms
      *
      * @var int|null
      */
-    protected static ?int $navigationSort = 8;
+    protected static ?int $navigationSort = 10;
 
     /**
      * Path ke file view yang merender halaman ini.
@@ -121,6 +122,20 @@ class PengaturanSistem extends Page implements HasForms
             'wa_api_key' => PengaturanDesa::get('wa_api_key'),
             'wa_session_id' => PengaturanDesa::get('wa_session_id', 'default'),
             'wa_default_target' => PengaturanDesa::get('wa_default_target'),
+
+            // Notification Templates
+            'notif_telegram_surat_pending' => PengaturanDesa::get('notif_telegram_surat_pending'),
+            'notif_telegram_surat_disetujui' => PengaturanDesa::get('notif_telegram_surat_disetujui'),
+            'notif_telegram_surat_ditolak' => PengaturanDesa::get('notif_telegram_surat_ditolak'),
+            'notif_telegram_surat_selesai' => PengaturanDesa::get('notif_telegram_surat_selesai'),
+            'notif_telegram_mutasi_disetujui' => PengaturanDesa::get('notif_telegram_mutasi_disetujui'),
+            'notif_telegram_mutasi_ditolak' => PengaturanDesa::get('notif_telegram_mutasi_ditolak'),
+            'notif_wa_surat_pending' => PengaturanDesa::get('notif_wa_surat_pending'),
+            'notif_wa_surat_disetujui' => PengaturanDesa::get('notif_wa_surat_disetujui'),
+            'notif_wa_surat_ditolak' => PengaturanDesa::get('notif_wa_surat_ditolak'),
+            'notif_wa_surat_selesai' => PengaturanDesa::get('notif_wa_surat_selesai'),
+            'notif_wa_mutasi_disetujui' => PengaturanDesa::get('notif_wa_mutasi_disetujui'),
+            'notif_wa_mutasi_ditolak' => PengaturanDesa::get('notif_wa_mutasi_ditolak'),
         ]);
     }
 
@@ -258,6 +273,11 @@ class PengaturanSistem extends Page implements HasForms
                                             ->options([
                                                 'gemini' => 'Google Gemini AI',
                                                 'openai' => 'OpenAI (atau kompatibel)',
+                                                'deepseek' => 'DeepSeek',
+                                                'ollama' => 'Ollama (Local)',
+                                                'bedrock' => 'AWS Bedrock',
+                                                'anthropic' => 'Anthropic Claude',
+                                                'groq' => 'Groq Fast AI',
                                             ])
                                             ->required()
                                             ->live(),
@@ -271,9 +291,9 @@ class PengaturanSistem extends Page implements HasForms
                                             ->placeholder('Contoh: gemini-flash-lite-latest atau deepseek-v4-flash')
                                             ->required(),
                                         TextInput::make('base_url')
-                                            ->label('OpenAI Base URL')
-                                            ->placeholder('https://api.openai.com/v1')
-                                            ->visible(fn ($get) => $get('provider_type') === 'openai'),
+                                            ->label('Base URL (Opsional)')
+                                            ->placeholder('Contoh: https://api.openai.com/v1')
+                                            ->visible(fn ($get) => in_array($get('provider_type'), ['openai', 'deepseek', 'ollama', 'groq'])),
                                         TextInput::make('priority')
                                             ->label('Urutan Prioritas')
                                             ->numeric()
@@ -355,6 +375,34 @@ class PengaturanSistem extends Page implements HasForms
                                     ->placeholder('62812xxxx')
                                     ->helperText('Nomor telepon perangkat/warga default penerima notifikasi pengumuman/berita baru.'),
                             ]),
+                        Tab::make('Template Notifikasi')
+                            ->icon('heroicon-o-envelope')
+                            ->schema([
+                                \Filament\Schemas\Components\Section::make('Telegram')
+                                    ->description('Gunakan HTML: <b>bold</b>, <code>code</code>, <i>italic</i>. Placeholder: {nomor}, {catatan}, {link}, {jenis}, {status}')
+                                    ->icon('heroicon-o-chat-bubble-oval-left-ellipsis')
+                                    ->collapsible()
+                                    ->schema([
+                                        Textarea::make('notif_telegram_surat_pending')->label('Surat — Pending')->rows(3),
+                                        Textarea::make('notif_telegram_surat_disetujui')->label('Surat — Disetujui')->rows(3),
+                                        Textarea::make('notif_telegram_surat_ditolak')->label('Surat — Ditolak')->rows(3),
+                                        Textarea::make('notif_telegram_surat_selesai')->label('Surat — Selesai')->rows(3),
+                                        Textarea::make('notif_telegram_mutasi_disetujui')->label('Mutasi — Disetujui')->rows(2),
+                                        Textarea::make('notif_telegram_mutasi_ditolak')->label('Mutasi — Ditolak')->rows(2),
+                                    ]),
+                                \Filament\Schemas\Components\Section::make('WhatsApp')
+                                    ->description('Plain text (tanpa HTML). Placeholder: {nomor}, {catatan}, {link}, {jenis}, {status}')
+                                    ->icon('heroicon-o-chat-bubble-oval-left-ellipsis')
+                                    ->collapsible()
+                                    ->schema([
+                                        Textarea::make('notif_wa_surat_pending')->label('Surat — Pending')->rows(3),
+                                        Textarea::make('notif_wa_surat_disetujui')->label('Surat — Disetujui')->rows(3),
+                                        Textarea::make('notif_wa_surat_ditolak')->label('Surat — Ditolak')->rows(3),
+                                        Textarea::make('notif_wa_surat_selesai')->label('Surat — Selesai')->rows(3),
+                                        Textarea::make('notif_wa_mutasi_disetujui')->label('Mutasi — Disetujui')->rows(2),
+                                        Textarea::make('notif_wa_mutasi_ditolak')->label('Mutasi — Ditolak')->rows(2),
+                                    ]),
+                            ]),
                      ]),
             ])
             ->statePath('data');
@@ -371,6 +419,7 @@ class PengaturanSistem extends Page implements HasForms
     {
         $data = $this->form->getState();
 
+        $changedKeys = [];
         foreach ($data as $key => $value) {
             $type = is_bool($value) ? 'boolean' : 'string';
             if (is_numeric($value) && !is_string($value)) {
@@ -380,7 +429,13 @@ class PengaturanSistem extends Page implements HasForms
                 $type = 'json';
             }
             PengaturanDesa::set($key, $value, $type);
+            $changedKeys[] = $key;
         }
+
+        SystemLogger::log('config.changed', 'Pengaturan desa diperbarui', null, [
+            'changed_keys' => $changedKeys,
+            'count' => count($changedKeys),
+        ]);
 
         Notification::make()
             ->title('Konfigurasi Berhasil Disimpan')

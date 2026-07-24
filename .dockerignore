@@ -1,0 +1,14 @@
+.git
+.gitattributes
+.gitignore
+.env
+.env.*
+node_modules
+vendor
+storage/framework/cache
+storage/framework/sessions
+storage/framework/views
+storage/logs
+docker-compose.yml
+phpunit.xml
+tests/

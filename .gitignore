@@ -1,5 +1,7 @@
 # Laravel
 .env
+.env.local
+.env.*.local
 /vendor
 /node_modules
 .phpunit.result.cache
@@ -36,18 +38,32 @@ apps/out/
 .idea/
 *.iml
 *.swp
+/storage/framework/views/*
 
 # IDE & Agent
 .vscode/
 .opencode/
 opencode.json
 .agents/
+AGENTS.md
+.opencodeignore
+.codebase-memory/
+docs/superpowers/
+docs/doc-review-report.md
+designpanel.md
 
 # Temporary
 *.zip
 *.pdf
 public/clean.php
 public/restructure.php
+public/global_refactor.php
+public/delete_old_migration.php
+fix_factories.php
+check_errors.php
+rag_setup.py
 
 # Other
 docs/audit-lengkap-*.md
+docs/doc-review-report.md
+.ignore

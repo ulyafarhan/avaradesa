@@ -4,7 +4,32 @@
 
 ---
 
-## Daftar Isi
+> **✨ Update 2026-07-23: Activity Log System & Aspirasi Warga**
+> - ✅ **Activity log system**: spatie/laravel-activitylog v4.12.3 — 12 titik logging (config, auth, notif, webhook, upload, exception, cleanup)
+> - ✅ **SystemLogger service** wrapper dengan retensi 90 hari, log name `system`
+> - ✅ **Aspirasi Warga**: fitur publik baru di Layanan Warga — Filament resource + activity_log event `aspirasi.kirim`
+> - ✅ **Log Aktivitas** di menu Pengaturan: read-only, filterable by event/subject/causer
+> - ✅ **Navigasi restructure**: Layanan → Layanan Warga, Konten → Informasi Desa, Pengaturan consolidasi
+> - ✅ **Log Migrasi**: `php artisan log:migrate-from-audit` — pindahkan data audit_logs lama ke activity_log
+> - ✅ **Bug fixes**: auth redirect guard, PendudukPolicy instanceof, section namespace, ULID BIGINT→STRING(26)
+> - ✅ **Seeder updates**: surat desa natural, rt_rw fixed, per-role passwords
+>
+> Selengkapnya: `docs/changelog-2026-07-23.md`.
+
+---
+
+> **✨ Update 2026-07-21: Full Security Audit & WhatsApp Integration**
+> - ✅ **51/51 temuan FIXED** (8 critical, 6 high, 10 medium, 12 low, 15 ponytail)
+> - ✅ **WhatsApp dual-provider**: wa-gateway (self-hosted) + Fonnte (cloud)
+> - ✅ **Notifikasi dual-channel**: Telegram + WhatsApp dengan template admin-editable
+> - ✅ **Gateway sync endpoint**: FAQ + kategori surat + template notifikasi sinkron
+> - ✅ **FAQ auto-reply** di WhatsApp webhook via knowledge base
+> - ✅ **Phone auto-format**: nomor HP warga otomatis format internasional
+> - ✅ **File deduplication**: reuse foto KTP/KK dari biodata saat pengajuan surat
+>
+> Selengkapnya: `docs/audit-lengkap-2026-07-20.md`.
+
+---
 
 - [1. Pendahuluan](#1-pendahuluan)
 - [2. Spesifikasi Teknis](#2-spesifikasi-teknis)
@@ -16,11 +41,13 @@
 - [8. Integrasi AI dan Telegram](#8-integrasi-ai-dan-telegram)
 - [9. Keamanan Sistem](#9-keamanan-sistem)
 - [10. Aplikasi Mobile & Desktop (Capacitor + Electron)](#10-aplikasi-mobile--desktop-capacitor--electron)
-- [11. Docker dan DevOps](#11-docker-dan-devops)
-- [12. Pengujian](#12-pengujian)
-- [13. Peta Jalan](#13-peta-jalan)
-- [14. Kontribusi](#14-kontribusi)
-- [15. Lisensi](#15-lisensi)
+- [11. Activity Log System](#11-activity-log-system)
+- [12. Docker dan DevOps](#12-docker-dan-devops)
+- [13. Pengujian](#13-pengujian)
+- [14. Peta Jalan](#14-peta-jalan)
+- [15. Kontribusi](#15-kontribusi)
+- [16. Lisensi](#16-lisensi)
+- [Changelog](#changelog)
 
 ---
 
@@ -69,7 +96,8 @@ AvaraDesa merupakan platform sistem informasi desa terpadu yang mendigitalisasi 
 | Barryvdh DomPDF | ^3.0 | Generator dokumen administrasi format PDF |
 | Simple QR Code | ^4.2 | Tanda tangan elektronik (TTE) berbasis hash SHA-256 |
 | AWS SDK PHP | ^3.388 | Integrasi AWS Bedrock untuk AI provider |
-| Scribe | ^5.10 | Dokumentasi API interaktif |
+| WhatsApp Multi-Provider | — | wa-gateway (Baileys) + Fonnte (cloud) |
+| **spatie/laravel-activitylog** | **^4.12.3** | Activity logging engine (menggantikan audit_logs legacy) |
 
 ### 2.2 Stack Frontend (Klien Web)
 
@@ -106,7 +134,6 @@ AvaraDesa merupakan platform sistem informasi desa terpadu yang mendigitalisasi 
 | Vitest | ^4.1.8 | 14 test methods frontend Vue (7 spec files) |
 | @vue/test-utils | ^2.4.11 | Utilitas pengujian komponen Vue |
 | @vitest/coverage-v8 | ^4.1.8 | Laporan cakupan pengujian |
-| Flutter Test | — | 20 test methods (10 file di test/) — widget & unit |
 
 ---
 
@@ -136,13 +163,14 @@ Sistem dibangun menggunakan arsitektur monolit modern 4 layer yang menggabungkan
 │  Document Processor (DomPDF + QR Code SHA-256)                   │
 │  Security Layer (CSP, HSTS, Rate Limiting, Audit Trail)          │
 │  5 Authorization Policies (RBAC per Model)                       │
+│  Activity Log System (spatie/laravel-activitylog, 12 locations)  │
 └──────────────────────────┬──────────────────────────────────────┘
                            │
                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                  Data & External Service Layer                    │
 ├─────────────────────────────────────────────────────────────────┤
-│  Database: MySQL 8.0+ / MariaDB (26+ tabel)                     │
+│  Database: MySQL 8.0+ / MariaDB (30+ tabel)                     │
 │  Cache & Queue: Redis 6+ (session, cache, queue worker)         │
 │  Cloud Storage: S3 / Cloudflare R2 (auto-switch)                │
 │  AI Multi-Provider (16 Laravel AI SDK + 6 Custom Class):         │
@@ -159,7 +187,7 @@ Sistem dibangun menggunakan arsitektur monolit modern 4 layer yang menggabungkan
 ### 3.2 Penjelasan Layer
 
 - **Frontend Client Layer**: Menangani antarmuka pengguna melalui tiga kanal: PWA/SPA berbasis Vue 3 + Inertia.js untuk web, aplikasi Capacitor untuk Android/iOS, dan aplikasi Electron untuk Windows/Mac/Linux. Dilengkapi DOMPurify untuk sanitasi XSS.
-- **Backend & Admin Platform**: Mesin pemrosesan utama berbasis Laravel 13 dengan panel Filament v5. Menyediakan REST API dengan Sanctum auth, 5 authorization policies, security headers berlapis (CSP, HSTS, X-Frame-Options), dan rate limiting.
+- **Backend & Admin Platform**: Mesin pemrosesan utama berbasis Laravel 13 dengan panel Filament v5. Menyediakan REST API dengan Sanctum auth, 5 authorization policies, security headers berlapis (CSP, HSTS, X-Frame-Options), rate limiting, dan activity log system yang mencatat 12 titik operasional penting.
 - **Data & External Service Layer**: Penyimpanan data via MySQL dengan 26+ tabel relasional, caching via Redis, cloud storage S3/R2, integrasi 16 AI provider via Laravel AI SDK ditambah 6 custom class provider dengan fallback chain otomatis, notifikasi via Telegram Bot API, dan webhook WhatsApp.
 
 ---
@@ -251,9 +279,30 @@ Aplikasi dapat diakses di `http://localhost:8000`.
 **Kredensial Default:**
 | Role | Username | Password |
 |:-----|:---------|:---------|
-| Kepala Desa | `kepala_desa` | (lihat `ADMIN_DEFAULT_PASSWORD` di .env) |
-| Sekretaris Desa | `sekdes` | (sama) |
-| Operator | `operator` | (sama) |
+| Kepala Desa | `kepala desa` | `kepaladesa789` |
+| Sekretaris Desa | `sekdes` | `sekdes456` |
+| Operator | `operator` | `operator123` |
+| Demo (full access) | `admin` | `password` |
+
+**Akun Warga Demo:**
+| | Value |
+|:----|:------|
+| NIK | `1118060512900001` |
+| No. KK | `1118060001000001` |
+| Nama | Muhammad Rizal |
+| Password | `password` (untuk login PIN/biometrik) |
+
+> **⚠️ Peringatan:** Ubah password segera setelah instalasi! Password hanya untuk pengembangan/testing.
+
+### 4.3 Migrasi Activity Log (jika upgrade dari versi lama)
+
+Jika sudah memiliki data di tabel `audit_logs` (legacy), jalankan:
+
+```bash
+php artisan log:migrate-from-audit
+```
+
+Perintah ini memindahkan seluruh data `audit_logs` ke `activity_log` milik spatie/laravel-activitylog, lalu menonaktifkan resource AuditLogResource lama.
 
 ---
 
@@ -262,7 +311,13 @@ Aplikasi dapat diakses di `http://localhost:8000`.
 ```
 avaradesa/
 ├── app/
+│   ├── Console/Commands/          # Artisan commands (system:cleanup, log:migrate-from-audit)
 │   ├── Filament/                  # Panel administrasi Filament PHP
+│   │   ├── AdminPanelProvider.php
+│   │   ├── Auth/AdminLogin.php
+│   │   ├── Pages/                 # Dashboard, PengaturanSistem, PengaturanKontenPublik
+│   │   ├── Resources/             # CRUD resources (Penduduk, Surat, Aspirasi, ActivityLog, dll)
+│   │   └── Widgets/               # AdminStatsOverview, ServerPerformance, TrafficChart, dll
 │   ├── Http/
 │   │   ├── Controllers/Api/       # Controller API RESTful (13 controller)
 │   │   ├── Controllers/Web/       # Controller web Inertia (6 controller)
@@ -276,6 +331,7 @@ avaradesa/
 │   └── Services/
 │       ├── AiProviders/           # 6 class: BaseAiProvider + 5 provider (Gemini, OpenAI, DeepSeek, Ollama, Bedrock)
 │       ├── FallbackAiService.php  # Fallback chain multi-provider
+│       ├── SystemLogger.php       # Activity log wrapper (spatie/laravel-activitylog)
 │       ├── TelegramService.php    # Telegram Bot API wrapper
 │       ├── TelegramKnowledgeService.php # Knowledge base + RAG
 │       ├── WhatsAppService.php    # WhatsApp API wrapper
@@ -284,27 +340,26 @@ avaradesa/
 │       ├── ImageService.php       # Kompresi gambar ke WebP
 │       └── GeminiAiService.php    # Gemini AI service (legacy)
 ├── apps/                          # Aplikasi Multiplatform (Vue 3 + Capacitor + Electron)
-│   ├── src/                       # Source code Vue 3 + TypeScript
+│   ├── src/                       # Source code Vue 3 + TypeScript + Pinia
 │   ├── capacitor.config.ts        # Konfigurasi Capacitor
 │   ├── electron/                  # Main process Electron
 │   ├── electron-builder.yml       # Build config Electron
 │   ├── android/                   # Native Android project
 │   ├── ios/                       # Native iOS project
-│   └── package.json               # Dependensi Vue 3, Pinia, Capacitor, Electron
-├── config/                        # Konfigurasi Laravel (sanctum, ai, services, dll)
+│   └── package.json               # Dependensi Vue 3, Pinia, Capacitor, Electron, TypeScript
+├── config/                        # Konfigurasi Laravel (sanctum, ai, services, activitylog, dll)
 ├── database/
 │   ├── factories/                 # 10 factory untuk testing
-│   ├── migrations/                # 40 migration file
+│   ├── migrations/                # 48 migration file
 │   └── seeders/                   # 12 seeder (data awal + dummy)
 ├── resources/
 │   ├── css/                       # Tailwind CSS dengan design tokens
 │   ├── js/
-│   │   ├── Components/            # 10 komponen Vue reusable
+│   │   ├── Components/            # 13 komponen Vue reusable
 │   │   ├── Layouts/               # CitizenLayout, PublicLayout
 │   │   ├── Pages/                 # Halaman Vue (Auth, Citizen, Public)
 │   │   └── Utils/                 # alert, imageCompressor, sanitize
 │   └── views/                     # Blade templates (app, PDF surat)
-├── test/                          # Test Flutter (legacy widget/unit test — 10 file)
 ├── tests/
 │   ├── Feature/                   # 17 file feature test
 │   └── Unit/                      # 23 file unit test
@@ -336,7 +391,8 @@ Sistem didukung oleh **26+ tabel** yang saling terintegrasi, terdiri dari tabel 
 | `bot_knowledges` | Basis pengetahuan chatbot (FAQ + RAG context) | SoftDeletes |
 | `chatbot_logs` | Log interaksi warga dengan bot AI | — |
 | `knowledge_keywords` | Kata kunci untuk pencocokan knowledge base | FK → bot_knowledges |
-| `audit_logs` | Jejak audit seluruh aksi mutasi database | Polymorphic user |
+| `activity_log` | Activity log engine (spatie/laravel-activitylog) | Polymorphic (causer + subject) |
+| `audit_logs` | Jejak audit legacy (deprecated, migrasi ke activity_log) | Polymorphic user |
 | `traffic_logs` | Statistik kunjungan publik | — |
 | `telegram_broadcast_queue` | Antrean notifikasi massal | FK → administrators |
 | `inventaris_fasilitas` | Data fasilitas publik desa | SoftDeletes |
@@ -455,14 +511,20 @@ Seluruh endpoint API berada di bawah prefix `/api/v1/`. **Total: 57 Endpoint API
 | DELETE | `/v1/admin/fasilitas/{id}` | Hapus fasilitas | Bearer (Admin) |
 | GET | `/v1/admin/audit-log` | Log aktivitas sistem | Bearer (Admin) |
 
-### 7.8 Webhook
+### 7.8 Gateway Sync (WhatsApp)
+
+| Metode | Endpoint | Deskripsi | Otorisasi |
+|:-------|:---------|:----------|:----------|
+| GET | `/v1/gateway/sync` | Sinkronisasi FAQ + kategori + template notifikasi ke wa-gateway | X-API-Key (throttle:30,1) |
+
+### 7.9 Webhook
 
 | Metode | Endpoint | Deskripsi | Otorisasi |
 |:-------|:---------|:----------|:----------|
 | POST | `/v1/telegram/webhook` | Menangani pesan masuk dari Telegram | IP Restrict (throttle:60,1) |
-| POST | `/v1/whatsapp/webhook` | Menangani pesan masuk dari WhatsApp | IP Restrict (throttle:60,1) |
+| POST | `/v1/whatsapp/webhook` | Menangani pesan masuk dari WhatsApp + FAQ auto-reply | X-API-Key (throttle:60,1) |
 
-### 7.9 Rute Web (20 Rute)
+### 7.10 Rute Web (20 Rute)
 
 | Metode | Endpoint | Deskripsi | Otorisasi |
 |:-------|:---------|:----------|:----------|
@@ -541,12 +603,33 @@ Lapisan kustom di `app/Services/AiProviders/` untuk fallback chain yang lebih te
 - **Broadcasting**: Antrean asinkronus via Redis untuk notifikasi massal
 - **Perintah**: `/start`, `/bind <NIK>`, `/help`, pertanyaan bebas (diarahkan ke AI)
 
-> **Catatan**: Webhook Telegram tidak memverifikasi `X-Telegram-Bot-Api-Secret-Token` — keamanan mengandalkan IP restrict dan throttle.
+### 8.3 WhatsApp Bot — Multi-Provider
 
-### 8.3 WhatsApp Bot
+Sistem WhatsApp mendukung dua provider dengan switching otomatis:
 
-- Webhook endpoint `/v1/whatsapp/webhook`
-- Job antrean: `SendNewsWhatsappNotificationJob`, `SendStatusWhatsappJob`
+| Provider | Tipe | Keunggulan |
+|:---------|:-----|:-----------|
+| wa-gateway | Self-hosted (Baileys) | Gratis, kendali penuh, anti-ban behavior engine |
+| Fonnte | Cloud | Tanpa VPS, API sederhana, reliable |
+
+**Fitur:**
+- **Notifikasi otomatis**: Status pengajuan surat & mutasi dikirim ke nomor HP warga
+- **FAQ auto-reply**: Webhook WhatsApp mencocokkan pesan masuk ke knowledge base (`bot_knowledges`)
+- **Template pesan admin-editable**: 12 template notifikasi (6 Telegram + 6 WhatsApp) diedit via Filament PengaturanSistem
+- **Provider switching**: Dipilih via `WHA_PROVIDER` di env atau `wa_provider` di database
+- **Gateway sync**: `GET /v1/gateway/sync` — wa-gateway ambil FAQ + kategori + template tiap 5 menit
+- **Normalisasi nomor**: `08xxx`/`+62xxx` → `628xxx` (format internasional)
+- **QR Code pairing**: WAGatewayCard.vue di halaman notifikasi admin
+- **Health check**: `checkHealth()` dan `getQrCode()` methods
+
+**Env baru:**
+```env
+WHA_PROVIDER=wa-gateway
+WHA_GATEWAY_URL=http://localhost:2785
+WHA_API_KEY=your-key
+WHA_SESSION_ID=default
+FONNTE_TOKEN=your-token
+```
 
 ---
 
@@ -565,8 +648,6 @@ Platform dirancang dengan standar keamanan berlapis:
 | Permissions-Policy | `camera=(), microphone=(), geolocation=()` |
 | Referrer-Policy | `strict-origin-when-cross-origin` |
 
-> **Catatan**: CSP menggunakan `'unsafe-inline'` untuk kompatibilitas dengan Inertia.js dan SweetAlert2 yang menyuntikkan style secara dinamis. Upgrade ke nonce/hash membutuhkan refactor frontend.
-
 ### 9.2 Autentikasi & Otorisasi
 
 - **Sanctum Token**: Expiry 1440 menit (24 jam), ability-based (`warga`/`admin`)
@@ -581,20 +662,26 @@ Platform dirancang dengan standar keamanan berlapis:
 | Login Warga/Admin | 5 percobaan per menit per IP |
 | Register/Reset PIN | 5/3 percobaan per menit |
 | Telegram Webhook | 60 request per menit |
+| WhatsApp Webhook | 60 request per menit (diverifikasi X-API-Key) |
 | API Global | 60 request per menit per user/IP |
 | AI Chatbot | 10 query per hari per chat ID |
 | Pengajuan Surat | 5 per menit |
 | Download PDF | 30 per menit |
+| Gateway Sync | 30 per menit |
+| Admin Endpoints | 60 per menit |
 
 ### 9.4 Proteksi Data
 
-- **Audit Trail**: Setiap aksi Create/Update/Delete tercatat (aktor, timestamp, data lama/baru)
+- **Activity Log**: Setiap aksi penting tercatat — causer, subject, event, properties (data lama/baru)
 - **XSS Prevention**: DOMPurify sanitasi pada client, Laravel escaping pada server
 - **SQL Injection**: Eloquent ORM prepared statements
 - **CSRF**: Token pada semua form web
-- **PII di Log**: Payload Telegram di-sanitasi, tidak log data pribadi warga
+- **PII di Log**: Payload webhook di-sanitasi (hanya metadata, tidak log data pribadi warga)
 - **WebP Compression**: Client-side image compression ke WebP (PDF bypass otomatis)
 - **Tanda Tangan Digital**: QR Code SHA-256 pada setiap dokumen surat
+- **Biometric Key**: Hash SHA-256 (ditingkatkan ke `Hash::make()` bcrypt untuk keamanan lebih baik)
+- **File Deduplication**: Foto KTP/KK dari biodata reuse untuk pengajuan surat
+- **Phone Auto-Format**: `08xxx`/`+62xxx`/`8xxx` → `628xxx` otomatis saat simpan
 
 ---
 
@@ -617,7 +704,7 @@ Aplikasi native untuk Android, iOS, Windows, Mac, dan Linux dibangun dari satu c
 
 - **Framework**: Vue 3 (Composition API) + TypeScript + Tailwind v4
 - **State Management**: Pinia
-- **Routing**: Vue Router
+- **Routing**: Vue Router (independen, bukan Inertia)
 - **Offline Data**: IndexedDB (localForage) / SQLite via Capacitor Plugin
 - **Native**: Capacitor 8 (Android/iOS) + Electron 43 (Windows/Mac/Linux)
 - **API**: Mengkonsumsi langsung `/api/v1/` yang sama dengan portal web, meminimalisir duplikasi kode
@@ -648,9 +735,96 @@ npm run electron:build
 
 ---
 
-## 11. Docker dan DevOps
+## 11. Activity Log System
 
-### 11.1 Docker (Production)
+Sistem logging terintegrasi menggunakan **spatie/laravel-activitylog v4.12.3** dengan wrapper **SystemLogger**.
+
+### 11.1 Arsitektur
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                    Logging Points (12 locations)                  │
+├──────────────────────────────────────────────────────────────────┤
+│ 1. Config changes   (pengaturan_desa update)                     │
+│ 2. Auth login       (admin login success/failure)                │
+│ 3. Auth login       (warga login success)                        │
+│ 4. Notification     (Telegram broadcast sent)                    │
+│ 5. Notification     (WhatsApp notification sent)                 │
+│ 6. Webhook Telegram (incoming message processed)                 │
+│ 7. Webhook WhatsApp (incoming message processed)                 │
+│ 8. File upload      (KTP/KK photo uploaded)                      │
+│ 9. Exception        (unhandled exceptions in app)                │
+│ 10. Cleanup         (old activity_log pruning)                   │
+│ 11. Bot Knowledge   (CRUD operations)                            │
+│ 12. Aspirasi        (aspirasi.kirim event)                       │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │
+                            ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                    SystemLogger Service                           │
+├──────────────────────────────────────────────────────────────────┤
+│  App\Services\SystemLogger.php                                    │
+│                                                                   │
+│  Methods:                                                         │
+│  - log(string $event, string $description,                       │
+│         ?Model $subject = null, ?array $properties = null)        │
+│  - on(Model $subject) → set subject                               │
+│  - withProperties(array $properties) → set extra data             │
+│  - by(?Model $causer = null) → set causer                        │
+│                                                                   │
+│  Default: log name = 'system'                                     │
+│  Retention: 90 hari (via system:cleanup command)                  │
+└───────────────────────────┬──────────────────────────────────────┘
+                            │
+                            ▼
+┌──────────────────────────────────────────────────────────────────┐
+│              activity_log table (spatie)                          │
+├──────────────────────────────────────────────────────────────────┤
+│  - id (ULID, string 26 chars)                                    │
+│  - log_name ('system')                                            │
+│  - description (human-readable)                                   │
+│  - event ('config.updated', 'auth.login', 'aspirasi.kirim', dll)  │
+│  - subject_type + subject_id (polymorphic)                        │
+│  - causer_type + causer_id (polymorphic)                          │
+│  - properties (JSON — data lama/baru, metadata)                   │
+│  - created_at + updated_at                                        │
+│  - batch_uuid (nullable)                                          │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### 11.2 Filament Resource: ActivityLogResource
+
+Tersedia di menu **Pengaturan → Log Aktivitas** (read-only).
+
+**Fitur:**
+- Filter by event (dropdown dinamis dari unique events)
+- Filter by causer (nama pengguna)
+- Filter by subject type
+- Filter by date range
+- Pencarian teks di kolom description
+- Tabel: event badge, description, causer, subject, timestamp (created_at)
+- Detail modal: properties JSON (data lama/baru) yang di-format
+
+### 11.3 Log Migrasi (Legacy → Activity Log)
+
+Data `audit_logs` (tabel lama) dipindahkan ke `activity_log` via Artisan command:
+
+```bash
+php artisan log:migrate-from-audit
+```
+
+Proses migrasi:
+1. Baca seluruh data dari `audit_logs` (paginated)
+2. Mapping: tiap audit_log row → activity_log entry dengan log_name = 'system'
+3. Event name mapping: `created`/`updated`/`deleted` → `audit.created`/`audit.updated`/`audit.deleted`
+4. Hapus menu navigasi AuditLogResource (hidden)
+5. Hapus route lama audit_log (jika ada)
+
+---
+
+## 12. Docker dan DevOps
+
+### 12.1 Docker (Production)
 
 ```bash
 docker compose up -d --build
@@ -659,13 +833,13 @@ docker compose exec app php artisan migrate --seed --force
 
 Layanan: `app` (PHP-FPM + Nginx + Supervisor), `db` (MySQL 8.0), `redis` (Alpine).
 
-### 11.2 CI/CD Pipeline
+### 12.2 CI/CD Pipeline
 
 GitHub Actions workflow (`.github/workflows/ci.yml`):
 - **Laravel**: Setup PHP 8.3 → Composer install → Migrate → PHPUnit
 - **Vue**: Setup Node 20 → npm ci → ESLint → Vitest
 
-### 11.3 Deployment Guide
+### 12.3 Deployment Guide
 
 Lihat `DEPLOY.md` untuk panduan lengkap:
 - Tuning PHP-FPM, MariaDB, Redis, OpCache untuk **1 GB RAM**
@@ -675,19 +849,18 @@ Lihat `DEPLOY.md` untuk panduan lengkap:
 
 ---
 
-## 12. Pengujian
+## 13. Pengujian
 
-### 12.1 Cakupan Pengujian
+### 13.1 Cakupan Pengujian
 
 | Layer | File Test | Test Methods |
 |:------|:---------|:------------|
-| Feature (Backend) | 17 | ~140 |
-| Unit (Backend) | 23 | ~60 |
-| Vue.js (Frontend) | 7 spec | 14 |
-| Flutter Widget/Unit (legacy) | 10 | ~20 |
-| **Total** | **57** | **~230+** |
+| Feature (Backend) | 18 | ~140 |
+| Unit (Backend) | 24 | ~60 |
+| Vue.js (Frontend) | 8 spec | 14 |
+| **Total** | **50** | **~200+** |
 
-### 12.2 Area yang Diuji
+### 13.2 Area yang Diuji
 
 - **Autentikasi**: Login warga/admin, logout, token lifecycle, PIN, biometrik, bind telegram
 - **Pengajuan Surat**: Submit, approve, reject, tracking, nomor registrasi, download PDF
@@ -704,7 +877,7 @@ Lihat `DEPLOY.md` untuk panduan lengkap:
 - **Vue Components**: FormInput, FormSelect, StatusBadge, Toast, SkeletonLoader, login behavior
 - **Webhook**: Telegram webhook handling, rate limit, callback query
 
-### 12.3 Eksekusi
+### 13.3 Eksekusi
 
 ```bash
 # Backend (PHPUnit)
@@ -719,11 +892,11 @@ npm run lint
 
 ---
 
-## 13. Peta Jalan
+## 14. Peta Jalan
 
 ### Fase 1: Backend API & Core Engine — **Selesai**
 
-- Database relasional 26+ tabel + 7 referensi
+-   Database relasional 30+ tabel + 7 referensi
 - 57 endpoint API + 20 rute web
 - Integrasi multi-AI dual layer (16 SDK + 6 custom class)
 - Fallback chain Gemini → OpenAI dengan provider siap pakai: DeepSeek, Ollama, Bedrock
@@ -745,12 +918,29 @@ npm run lint
 
 ### Fase 3: Testing & Deployment — **Selesai**
 
-- 230+ automated tests (PHPUnit + Vitest + Flutter)
+- 200+ automated tests (PHPUnit + Vitest)
 - Docker containerization (Dockerfile + docker-compose)
 - CI/CD pipeline (GitHub Actions)
 - Panduan deployment production (DEPLOY.md, 1GB RAM tuning)
 
-### Fase 4: Pengembangan Lanjutan — **Dalam Pengerjaan**
+### Fase 4: WhatsApp & Notifikasi — **Selesai**
+
+- ✅ WhatsApp dual-provider (wa-gateway + Fonnte)
+- ✅ Notifikasi dual-channel (Telegram + WhatsApp) untuk status surat & mutasi
+- ✅ Template notifikasi admin-editable (12 template di Filament)
+- ✅ Gateway sync endpoint untuk wa-gateway auto-reply
+- ✅ FAQ auto-reply di WhatsApp webhook
+
+### Fase 5: Activity Log System — **Selesai**
+
+- ✅ spatie/laravel-activitylog v4.12.3
+- ✅ SystemLogger service wrapper (12 titik logging)
+- ✅ ActivityLogResource Filament (filterable, read-only)
+- ✅ 90-day retention dengan system:cleanup
+- ✅ log:migrate-from-audit command
+- ✅ Aspirasi Warga dengan logging event
+
+### Fase 6: Pengembangan Lanjutan — **Dalam Pengerjaan**
 
 - Aktivasi penuh DeepSeek, Ollama, dan Bedrock di fallback chain
 - Peningkatan cakupan pengujian (target 300+ test methods)
@@ -760,7 +950,7 @@ npm run lint
 
 ---
 
-## 14. Kontribusi
+## 15. Kontribusi
 
 Kontribusi sangat diterima. Untuk berkontribusi:
 
@@ -780,9 +970,37 @@ npm run lint
 
 ---
 
-## 15. Lisensi
+## 16. Lisensi
 
 Proyek ini dilisensikan di bawah **MIT License**. Detail lisensi dapat dibaca di berkas `LICENSE`.
+
+---
+
+## Changelog
+
+### 2026-07-23 — Activity Log System & Aspirasi Warga
+- **Added**: spatie/laravel-activitylog v4.12.3 dengan SystemLogger service
+- **Added**: 12 titik logging (config, auth, notif, webhook, upload, exception, cleanup)
+- **Added**: ActivityLogResource (Filament read-only, filterable by event/subject/causer)
+- **Added**: Aspirasi Warga Resource (Layanan Warga → Aspirasi Warga)
+- **Added**: `php artisan log:migrate-from-audit` — migrasi data audit_logs ke activity_log
+- **Added**: `php artisan system:cleanup` — hapus log > 90 hari
+- **Changed**: Navigasi Layanan → Layanan Warga, Konten → Informasi Desa
+- **Changed**: Pengaturan consolidasi + Log Aktivitas + Bot Pengetahuan
+- **Changed**: activity_log causer_id/subject_id dari BIGINT ke STRING(26) untuk ULID
+- **Fixed**: Auth redirect guard detection di AuthenticationException handler
+- **Fixed**: PendudukPolicy strict type-hint, tambah instanceof Administrator
+- **Fixed**: Section namespace di PengaturanSistem
+- **Fixed**: Seeder updates (surat desa natural, rt_rw, per-role passwords)
+
+### 2026-07-21 — Full Security Audit & WhatsApp Integration
+- **Fixed**: 51/51 temuan OWASP Top 10 (2021) — 8 critical, 6 high, 10 medium, 12 low, 15 ponytail
+- **Added**: WhatsApp dual-provider (wa-gateway self-hosted + Fonnte cloud)
+- **Added**: Notifikasi dual-channel Telegram + WhatsApp (12 template admin-editable)
+- **Added**: Gateway sync endpoint untuk FAQ + kategori + template
+- **Added**: FAQ auto-reply via knowledge base di WhatsApp webhook
+- **Added**: Phone auto-format (`08xxx` → `628xxx`)
+- **Added**: File deduplication (reuse foto KTP/KK)
 
 ---
 

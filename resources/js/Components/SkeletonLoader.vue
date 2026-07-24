@@ -6,10 +6,12 @@ defineProps({
 </script>
 
 <template>
-    <div v-if="variant === 'text'" class="animate-pulse space-y-3">
-        <div class="h-4 rounded bg-slate-200" />
-        <div class="h-4 w-5/6 rounded bg-slate-200" />
-        <div class="h-20 rounded bg-slate-200" />
+    <div v-if="variant === 'text'" class="space-y-6">
+        <div v-for="i in count" :key="i" class="animate-pulse space-y-3">
+            <div class="h-4 rounded bg-slate-200" />
+            <div class="h-4 w-5/6 rounded bg-slate-200" />
+            <div class="h-20 rounded bg-slate-200" />
+        </div>
     </div>
 
     <div v-else-if="variant === 'card'" class="grid gap-4" :class="count > 1 ? 'sm:grid-cols-2 lg:grid-cols-3' : ''">

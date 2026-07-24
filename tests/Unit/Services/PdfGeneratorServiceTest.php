@@ -49,6 +49,8 @@ class PdfGeneratorServiceTest extends TestCase
 
     public function test_generate_nomor_surat_formats_correctly()
     {
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::create(2026, 7, 10));
+        
         $service = new class extends PdfGeneratorService {
             public function testGenerateNomorSurat($pengajuan) {
                 return $this->generateNomorSurat($pengajuan);
@@ -58,11 +60,14 @@ class PdfGeneratorServiceTest extends TestCase
         $nomorSurat = $service->testGenerateNomorSurat($this->pengajuan);
 
         // Expecting 1 because it's the first in the year
-        $this->assertEquals('SKD/001/DESA/JULI/2026', $nomorSurat);
+        $this->assertEquals('SKD/001/DESA-SUKAMAKMUR/JULI/2026', $nomorSurat);
+        
+        \Carbon\Carbon::setTestNow();
     }
 
     public function test_generate_surat_pdf_creates_file_and_updates_model()
     {
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::create(2026, 7, 10));
         Storage::fake('public');
         
         $mockPdf = $this->mock(\Barryvdh\DomPDF\PDF::class);
@@ -83,6 +88,8 @@ class PdfGeneratorServiceTest extends TestCase
         $mockView = $this->mock(\Illuminate\View\View::class);
         $mockView->shouldReceive('render')->andReturn('<html>Test</html>');
         
+        \Illuminate\Support\Facades\View::shouldReceive('exists')
+            ->andReturn(true);
         \Illuminate\Support\Facades\View::shouldReceive('make')
             ->andReturn($mockView);
             
@@ -99,5 +106,7 @@ class PdfGeneratorServiceTest extends TestCase
         $this->assertCount(1, $files);
         $this->assertStringContainsString($filename, $files[0]);
         $this->assertEquals(Storage::disk('public')->url($files[0]), $url);
+        
+        \Carbon\Carbon::setTestNow();
     }
 }

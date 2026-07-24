@@ -39,7 +39,7 @@ class KategoriSuratResource extends Resource
 
     protected static ?string $navigationLabel = 'Kategori Surat';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 8;
 
     /**
      * Membangun form isian kategori surat.
@@ -69,6 +69,12 @@ class KategoriSuratResource extends Resource
                         ->maxLength(100)
                         ->prefixIcon('heroicon-o-code-bracket')
                         ->placeholder('Nama file template Blade'),
+                    Textarea::make('body_content')
+                        ->label('Body Surat')
+                        ->placeholder('Contoh: Yang bertanda tangan di bawah ini menerangkan bahwa...')
+                        ->helperText('Gunakan placeholder: {nama_desa}, {kecamatan}, {kabupaten}, {provinsi}, {kode_pos}, {nama_kepala_desa}, {nip_kepala_desa}. Kosongkan untuk menggunakan teks default.')
+                        ->rows(5)
+                        ->columnSpanFull(),
                     Toggle::make('is_active')
                         ->label('Aktif')
                         ->default(true)

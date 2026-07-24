@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendStatusWhatsappJob;
 use App\Models\KategoriSurat;
 use App\Models\Penduduk;
 use App\Models\PengajuanSurat;
 use App\Models\TrackingPengajuanSurat;
+use App\Services\TelegramService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -187,6 +189,10 @@ class CitizenSubmissionController extends Controller
             ]);
         });
 
+        app(TelegramService::class)->notifyPengajuanStatus(
+            $pengajuan->nik_pemohon, 'Pending', $pengajuan->nomor_registrasi
+        );
+
         return redirect()
             ->route('warga.pengajuan.show', $pengajuan)
             ->with('success', 'Pengajuan surat berhasil dibuat.');
@@ -260,21 +266,37 @@ class CitizenSubmissionController extends Controller
         $rawNamaDesa = \App\Models\PengaturanDesa::get('nama_desa', 'Udeung');
         $cleanNamaDesa = preg_replace('/^(desa|desa)\s+/i', '', $rawNamaDesa);
 
+        $namaDesa = $cleanNamaDesa;
+        $kecamatan = \App\Models\PengaturanDesa::get('kecamatan', 'Bandar Baru');
+        $kabupaten = \App\Models\PengaturanDesa::get('kabupaten', 'Pidie Jaya');
+        $provinsi = \App\Models\PengaturanDesa::get('provinsi', 'Aceh');
+        $kodePos = \App\Models\PengaturanDesa::get('kode_pos', '24186');
+        $namaKepalaDesa = \App\Models\PengaturanDesa::get('nama_kepala_desa', 'Nama Kepala Desa');
+        $nipKepalaDesa = \App\Models\PengaturanDesa::get('nip_kepala_desa', '');
+
+        // ponytail: body_content per kategori surat — replace placeholder dari DB
+        $bodyContent = $pengajuan->kategori?->body_content;
+        if ($bodyContent) {
+            $bodyContent = str_replace(
+                ['{nama_desa}', '{kecamatan}', '{kabupaten}', '{provinsi}', '{kode_pos}', '{nama_kepala_desa}', '{nip_kepala_desa}'],
+                [$namaDesa, $kecamatan, $kabupaten, $provinsi, $kodePos, $namaKepalaDesa, $nipKepalaDesa],
+                $bodyContent
+            );
+        }
+
         return Inertia::render('Citizen/Submission/Print', [
             'pengajuan' => $pengajuan,
             'qrCodeSvg' => $qrCodeSvg,
+            'bodyContent' => $bodyContent,
             'tanggalSurat' => $pengajuan->updated_at?->locale('id')->isoFormat('D MMMM YYYY') ?? now()->locale('id')->isoFormat('D MMMM YYYY'),
             'settings' => [
-                'nama_desa' => $cleanNamaDesa,
-                'nama_desa' => $cleanNamaDesa,
-                'kecamatan' => \App\Models\PengaturanDesa::get('kecamatan', 'Bandar Baru'),
-                'kabupaten' => \App\Models\PengaturanDesa::get('kabupaten', 'Pidie Jaya'),
-                'provinsi' => \App\Models\PengaturanDesa::get('provinsi', 'Aceh'),
-                'kode_pos' => \App\Models\PengaturanDesa::get('kode_pos', '24186'),
-                'nama_kepala_desa' => \App\Models\PengaturanDesa::get('nama_kepala_desa', 'Nama Kepala Desa'),
-                'nama_kepala desa' => \App\Models\PengaturanDesa::get('nama_kepala_desa', 'Nama Kepala Desa'),
-                'nip_kepala_desa' => \App\Models\PengaturanDesa::get('nip_kepala_desa', ''),
-                'nip_kepala desa' => \App\Models\PengaturanDesa::get('nip_kepala_desa', ''),
+                'nama_desa' => $namaDesa,
+                'kecamatan' => $kecamatan,
+                'kabupaten' => $kabupaten,
+                'provinsi' => $provinsi,
+                'kode_pos' => $kodePos,
+                'nama_kepala_desa' => $namaKepalaDesa,
+                'nip_kepala_desa' => $nipKepalaDesa,
             ]
         ]);
     }

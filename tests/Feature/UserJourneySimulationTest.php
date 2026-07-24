@@ -51,6 +51,7 @@ class UserJourneySimulationTest extends TestCase
         Config::set('database.connections.sqlite.database', ':memory:');
         Config::set('queue.default', 'sync');
         
+        \Illuminate\Support\Facades\Cache::flush();
         Storage::fake('public');
 
         // Menanam referensi master table
@@ -143,19 +144,21 @@ class UserJourneySimulationTest extends TestCase
         Config::set('services.telegram.webhook_secret', $webhookSecret);
         Config::set('services.telegram.bot_token', 'mocked_bot_token');
         
+        $this->instance(\App\Services\Contracts\AiProviderInterface::class, new class implements \App\Services\Contracts\AiProviderInterface {
+            public function generateResponse(string $msg, string $chatId, ?string $ctx = null): ?string {
+                \App\Models\ChatbotLog::create([
+                    'telegram_chat_id' => $chatId,
+                    'pesan_masuk' => $msg,
+                    'balasan_ai' => 'Jawaban simulasi chatbot AvaraDesa',
+                ]);
+                return 'Jawaban simulasi chatbot AvaraDesa';
+            }
+            public function fixCopywriting(string $t, ?string $title = null): ?string { return $t; }
+            public function generateSeoMetadata(string $t, string $c): ?array { return []; }
+            public function checkHealth(): bool { return true; }
+        });
+        
         Http::fake([
-            '*api.openai.com*' => Http::response([
-                'choices' => [
-                    [
-                        'message' => [
-                            'content' => 'Jawaban simulasi chatbot AvaraDesa'
-                        ]
-                    ]
-                ],
-                'usage' => [
-                    'total_tokens' => 15
-                ]
-            ], 200),
             '*api.telegram.org*' => Http::response(['ok' => true], 200)
         ]);
         
@@ -189,9 +192,24 @@ class UserJourneySimulationTest extends TestCase
      */
     public function test_citizen_and_administrator_end_to_end_operations_journey()
     {
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+
+        $this->instance(\App\Services\Contracts\AiProviderInterface::class, new class implements \App\Services\Contracts\AiProviderInterface {
+            public function generateResponse(string $msg, string $chatId, ?string $ctx = null): ?string {
+                \App\Models\ChatbotLog::create([
+                    'telegram_chat_id' => $chatId,
+                    'pesan_masuk' => $msg,
+                    'balasan_ai' => 'Jawaban simulasi chatbot AvaraDesa',
+                ]);
+                return 'Jawaban simulasi chatbot AvaraDesa';
+            }
+            public function fixCopywriting(string $t, ?string $title = null): ?string { return $t; }
+            public function generateSeoMetadata(string $t, string $c): ?array { return []; }
+            public function checkHealth(): bool { return true; }
+        });
+
         Http::fake([
             'https://api.telegram.org/*' => Http::response(['ok' => true], 200),
-            'https://api.openai.com/*' => Http::response([], 200),
             'https://upload.wikimedia.org/*' => Http::response('logo_data_binary', 200)
         ]);
 
@@ -227,8 +245,8 @@ class UserJourneySimulationTest extends TestCase
                 'lama_tinggal' => '5'
             ],
             'file_syarat' => [
-                'KTP' => 'uploaded/fake_ktp.jpg',
-                'Kartu Keluarga' => 'uploaded/fake_kk.pdf'
+                'KTP' => \Illuminate\Http\UploadedFile::fake()->image('fake_ktp.jpg'),
+                'Kartu Keluarga' => \Illuminate\Http\UploadedFile::fake()->create('fake_kk.pdf', 100, 'application/pdf')
             ]
         ];
 
@@ -250,7 +268,7 @@ class UserJourneySimulationTest extends TestCase
             'jenis_mutasi' => 'Kematian',
             'tanggal_mutasi' => now()->format('Y-m-d'),
             'keterangan' => 'Meninggal karena sakit',
-            'dokumen_bukti' => 'uploaded/surat_rs.pdf',
+            'dokumen_bukti' => 'documents/surat_rs.pdf',
         ];
 
         $mutasiResponse = $this->withToken($token)->postJson('/api/v1/mutasi', $mutasiData);
@@ -258,7 +276,7 @@ class UserJourneySimulationTest extends TestCase
         $mutasiId = $mutasiResponse->json('data.id');
 
         // 7. Security Header & Audit Log Verification
-        $submitResponse->assertHeader('X-Frame-Options', 'DENY');
+        $submitResponse->assertHeader('X-Frame-Options', 'SAMEORIGIN');
         
         $this->assertDatabaseHas('audit_logs', [
             'tindakan' => 'create',

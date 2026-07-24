@@ -263,27 +263,12 @@
         }
     }
 
-    /* ── Scrollbar: subtle, only on sidebar ── */
-    .fi-sidebar-nav::-webkit-scrollbar {
-        width: 4px;
-    }
-
-    .fi-sidebar-nav::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .fi-sidebar-nav::-webkit-scrollbar-thumb {
-        background: rgba(148, 163, 184, 0.3);
-        border-radius: 4px;
-    }
-
-    .fi-sidebar-nav::-webkit-scrollbar-thumb:hover {
-        background: rgba(148, 163, 184, 0.5);
-    }
-
-    .fi-sidebar-nav {
-        scrollbar-width: thin;
-        scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+    /* ── Scrollbar: hidden ── */
+    * { scrollbar-width: none !important; }
+    *::-webkit-scrollbar, *::-webkit-scrollbar-track, *::-webkit-scrollbar-thumb {
+        display: none !important;
+        width: 0 !important;
+        background: transparent !important;
     }
 
     /* ── Page transition ── */

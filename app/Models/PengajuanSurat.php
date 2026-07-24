@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 
 /**
@@ -30,7 +32,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
  */
 class PengajuanSurat extends Model
 {
-    use HasUlids;
+    use HasFactory, HasUlids;
 
     /**
      * Nama tabel database yang terhubung dengan model ini.
@@ -163,6 +165,12 @@ class PengajuanSurat extends Model
             if (empty($model->nomor_registrasi)) {
                 $model->nomor_registrasi = static::generateNomorRegistrasi();
             }
+            if (is_array($model->data_isian)) {
+                $model->data_isian = array_map(
+                    fn($v) => is_string($v) ? strip_tags($v) : $v,
+                    $model->data_isian
+                );
+            }
         });
     }
 
@@ -177,7 +185,9 @@ class PengajuanSurat extends Model
     public static function generateNomorRegistrasi(): string
     {
         $prefix = date('Ymd');
-        $count = static::whereDate('created_at', today())->count() + 1;
+        $count = DB::transaction(fn () =>
+            static::whereDate('created_at', today())->lockForUpdate()->count() + 1
+        );
         return sprintf('%s-%04d', $prefix, $count);
     }
 }
