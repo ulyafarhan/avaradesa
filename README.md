@@ -4,7 +4,7 @@ Sistem Informasi Desa Terpadu berbasis Laravel + Filament + Vue 3. Multi-platfor
 
 **Akses Cepat:**
 - Website: [https://avaradesa.my.id](https://avaradesa.my.id)
-- Admin Panel: [https://avaradesa.my.id/admin](https://avaradesa.my.id/admin/login)
+- Admin Panel: [https://avaradesa.my.id/admin/login](https://avaradesa.my.id/admin/login)
 - Dokumentasi API: [https://avaradesa.my.id/docs](https://avaradesa.my.id/docs)
 
 ### Demo Account
