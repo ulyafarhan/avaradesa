@@ -29,6 +29,7 @@ apps/out/
 # Build
 /build/
 /coverage/
+build_output/
 
 # Logs & caches
 *.log

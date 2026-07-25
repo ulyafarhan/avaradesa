@@ -18,7 +18,7 @@ async function submit() {
     await auth.loginAdmin(username.value, password.value)
     router.push('/admin/dashboard')
   } catch (e: any) {
-    error.value = e.response?.data?.message ?? e.message ?? 'Username atau password salah'
+    error.value = e.message ?? 'Username atau password salah'
   } finally {
     submitting.value = false
   }

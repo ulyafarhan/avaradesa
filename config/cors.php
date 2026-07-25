@@ -19,9 +19,15 @@ return [
 
     'allowed_methods' => ['GET', 'POST', 'PUT', 'DELETE'],
 
-    'allowed_origins' => [env('APP_URL', 'http://localhost')],
+    'allowed_origins' => ['*'],
 
-    'allowed_origins_patterns' => ['#^https?://localhost(:\d+)?$#', '#^https?://127\.0\.0\.1(:\d+)?$#'],
+    'allowed_origins_patterns' => [
+        '#^https?://localhost(:\d+)?$#',
+        '#^https?://127\.0\.0\.1(:\d+)?$#',
+        '#^capacitor://localhost(:\d+)?$#',
+        '#^null$#',
+        '#^file://#',
+    ],
 
     'allowed_headers' => ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
 
@@ -29,6 +35,6 @@ return [
 
     'max_age' => 86400,
 
-    'supports_credentials' => true,
+    'supports_credentials' => false,
 
 ];

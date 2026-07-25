@@ -11,7 +11,7 @@ class AdminPendudukController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Penduduk::withoutTrashed()->query();
+        $query = Penduduk::withoutTrashed();
 
         // Pencarian berdasarkan NIK atau Nama
         if ($request->filled('search')) {
@@ -80,7 +80,7 @@ class AdminPendudukController extends Controller
         $penduduk = Penduduk::withoutTrashed()->findOrFail($id);
 
         $validated = $request->validate([
-            'nik' => ['required', 'string', 'size:16', Rule::unique('penduduk', 'nik')->ignore($penduduk->id)],
+            'nik' => ['required', 'string', 'size:16', Rule::unique('penduduk', 'nik')->ignore($penduduk->getKey())],
             'no_kk' => 'required|string|size:16',
             'nama_lengkap' => 'required|string|max:255',
             'jenis_kelamin' => 'required|in:L,P',

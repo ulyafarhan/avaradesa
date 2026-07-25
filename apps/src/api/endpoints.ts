@@ -42,6 +42,7 @@ export const endpoints = {
   informasi: {
     list: `${BASE}/admin/informasi`,
     detail: (id: string) => `${BASE}/informasi/${id}`,
+    adminDetail: (id: string) => `${BASE}/admin/informasi/${id}`,
     create: `${BASE}/admin/informasi`,
     update: (id: string) => `${BASE}/admin/informasi/${id}`,
     delete: (id: string) => `${BASE}/admin/informasi/${id}`,

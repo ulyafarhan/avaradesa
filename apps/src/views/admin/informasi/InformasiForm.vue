@@ -21,7 +21,7 @@ const form = ref({
 onMounted(async () => {
   if (isEdit) {
     try {
-      const res: any = await api.get(endpoints.informasi.detail(route.params.id as string))
+      const res: any = await api.get(endpoints.informasi.adminDetail(route.params.id as string))
       const d = res.data ?? {}
       form.value = {
         judul: d.judul ?? '', konten: d.konten ?? d.isi ?? '', kategori: d.kategori as any,

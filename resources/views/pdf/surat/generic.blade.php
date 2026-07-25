@@ -234,11 +234,11 @@
 
     <div class="qr-code">
         <img src="{{ $qr_code_path }}" alt="QR Code TTE">
-        <p style="font-size: 7pt; margin: 2px 0 0 0; text-align: center; color: #555;">Scan Verifikasi TTE</p>
+        <p style="font-size: 7pt; margin: 2px 0 0 0; text-align: center; color: #555;">Scan Verifikasi</p>
     </div>
 
     <div class="footer">
-        Dokumen Resmi Desa Ini Ditandatangani Secara Elektronik (TTE) & Sah Menurut UU ITE
+        Diverifikasi dengan QR Code — Scan untuk verifikasi keaslian dokumen
     </div>
 </body>
 </html>

@@ -1,6 +1,6 @@
 import type { ApiError } from './types'
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+export const BASE_URL = 'https://avaradesa.my.id'
 
 function getToken(): string | null {
   try {
@@ -23,7 +23,18 @@ async function request<T>(
   }
   if (token) headers['Authorization'] = `Bearer ${token}`
 
-  const res = await fetch(`${BASE_URL}${endpoint}`, { ...options, headers })
+  const url = `${BASE_URL}${endpoint}`
+  // ponytail: debug log — hapus setelah root cause ditemukan
+  console.log(`[API] ${options.method ?? 'GET'} ${url}`, { hasToken: !!token })
+
+  let res: Response
+  try {
+    res = await fetch(url, { ...options, headers })
+  } catch (e: unknown) {
+    const msg = e instanceof TypeError ? 'NETWORK_ERROR: CORS / DNS / SSL' : String(e)
+    console.error(`[API] FETCH FAILED: ${msg}`, { url, method: options.method ?? 'GET' })
+    throw { message: msg }
+  }
 
   if (!res.ok) {
     if (res.status === 401 && !endpoint.includes('/auth/login')) {
@@ -34,9 +45,14 @@ async function request<T>(
         window.location.href = '#/auth/login-warga'
       }
     }
-    const err: ApiError = await res.json().catch(() => ({
-      message: res.statusText,
-    }))
+    const body = await res.text().catch(() => '')
+    let err: ApiError
+    try {
+      err = JSON.parse(body)
+    } catch {
+      err = { message: `HTTP ${res.status}: ${res.statusText}${body ? ' — ' + body.slice(0, 200) : ''}` }
+    }
+    console.error(`[API] HTTP ${res.status}`, { url, method: options.method ?? 'GET', error: err.message })
     throw err
   }
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { api } from '../../../api/client'
+import { api, BASE_URL } from '../../../api/client'
 import { endpoints } from '../../../api/endpoints'
 import type { PengajuanSurat } from '../../../api/types'
 import StatusBadge from '../../../components/StatusBadge.vue'
@@ -38,9 +38,8 @@ async function handleDownloadPrint() {
   try {
     const downloadUrl = `/api/v1/surat/pengajuan/${item.value.id}/download`
     const token = auth.token ?? ''
-    const baseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
     
-    const response = await fetch(`${baseUrl}${downloadUrl}`, {
+    const response = await fetch(`${BASE_URL}${downloadUrl}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }

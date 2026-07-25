@@ -221,7 +221,7 @@
     </div>
 
     <div class="footer">
-        Dokumen ini ditandatangani secara elektronik dan sah menurut Undang-Undang ITE
+        Diverifikasi dengan QR Code — Scan untuk verifikasi keaslian dokumen
     </div>
 </body>
 </html>

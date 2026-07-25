@@ -38,7 +38,7 @@ async function submitKK() {
     router.push('/warga/dashboard')
   } catch (e: any) {
     hapticError()
-    error.value = e.response?.data?.message ?? e.message ?? 'NIK atau No. KK tidak sesuai'
+    error.value = e.message ?? 'NIK atau No. KK tidak sesuai'
   } finally {
     submitting.value = false
   }
@@ -53,7 +53,7 @@ async function submitPIN() {
     router.push('/warga/dashboard')
   } catch (e: any) {
     hapticError()
-    error.value = e.response?.data?.message ?? e.message ?? 'PIN salah atau belum didaftarkan'
+    error.value = e.message ?? 'PIN salah atau belum didaftarkan'
   } finally {
     submitting.value = false
   }
@@ -69,7 +69,7 @@ async function submitBiometric() {
     router.push('/warga/dashboard')
   } catch (e: any) {
     hapticError()
-    error.value = e.response?.data?.message ?? e.message ?? 'Sidik jari tidak dikenali'
+    error.value = e.message ?? 'Sidik jari tidak dikenali'
   } finally {
     submitting.value = false
   }
@@ -99,7 +99,7 @@ async function submitResetPIN() {
     }, 1500)
   } catch (e: any) {
     hapticError()
-    error.value = e.response?.data?.message ?? e.message ?? 'Verifikasi data kependudukan gagal'
+    error.value = e.message ?? 'Verifikasi data kependudukan gagal'
   } finally {
     submitting.value = false
   }
