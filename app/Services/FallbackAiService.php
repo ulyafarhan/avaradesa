@@ -7,7 +7,6 @@ use App\Models\ChatbotLog;
 use App\Models\PengaturanDesa;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Laravel\Ai\Facades\Ai;
 
 /**
  * Layanan untuk mengelola beberapa provider AI dengan logika prioritas dan fallback.
@@ -56,6 +55,13 @@ class FallbackAiService implements AiProviderInterface
                 ];
             }
         }
+
+        // ponytail: tambah Gemini sbg fallback terakhir kalau list dari DB semua gagal
+        $providers[] = [
+            'provider_type' => 'gemini',
+            'api_key' => config('services.gemini.api_key'),
+            'model' => config('services.gemini.model', 'gemini-pro'),
+        ];
 
         $lastException = null;
 
@@ -126,90 +132,102 @@ class FallbackAiService implements AiProviderInterface
         return new class($type, $this) implements AiProviderInterface {
             public function __construct(private string $driver, private FallbackAiService $service) {}
 
-            public function generateResponse(string $userMessage, string $chatId, ?string $context = null): ?string
+            private function callAI(string $prompt): ?string
             {
+                $key = config("ai.providers.{$this->driver}.key");
+                $url = config("ai.providers.{$this->driver}.url");
+                $model = config("ai.providers.{$this->driver}.model");
+
+                if (!$key) return null;
+
                 try {
-                    $cachedResponse = $this->service->findSemanticCachedResponse($userMessage);
-                    if ($cachedResponse) {
-                        ChatbotLog::create([
-                            'telegram_chat_id' => $chatId,
-                            'pesan_masuk'      => $userMessage,
-                            'balasan_ai'       => $cachedResponse,
-                            'tokens_used'      => 0,
-                        ]);
-                        return $cachedResponse;
+                    if ($this->driver === 'gemini') {
+                        $response = \Illuminate\Support\Facades\Http::timeout(60)
+                            ->post(($url ?: 'https://generativelanguage.googleapis.com/v1beta') . "/models/" . ($model ?: 'gemini-pro') . ":generateContent?key={$key}", [
+                                'contents' => [['parts' => [['text' => $prompt]]]],
+                            ]);
+                        return $response->json('candidates.0.content.parts.0.text');
                     }
 
-                    $systemPrompt = $context
-                        ? $this->service->getRAGSystemPrompt($context)
-                        : $this->service->getSystemPrompt();
-
-                    $fullPrompt = $systemPrompt . "\n\nUser: " . $userMessage;
-                    $aiResponse = Ai::driver($this->driver)->chat($fullPrompt);
-
-                    if ($aiResponse) {
-                        ChatbotLog::create([
-                            'telegram_chat_id' => $chatId,
-                            'pesan_masuk'      => $userMessage,
-                            'balasan_ai'       => $aiResponse,
-                            'tokens_used'      => null,
+                    $response = \Illuminate\Support\Facades\Http::withToken($key)
+                        ->timeout(60)
+                        ->post(($url ?: 'https://api.openai.com/v1') . '/chat/completions', [
+                            'model' => $model ?: 'gpt-4o-mini',
+                            'messages' => [['role' => 'user', 'content' => $prompt]],
                         ]);
-                    }
-
-                    return $aiResponse ?: null;
-                } catch (\Exception $e) {
-                    Log::error("AiProvider ({$this->driver}) generateResponse Error: " . $e->getMessage());
+                    return $response->json('choices.0.message.content');
+                } catch (\Throwable $e) {
+                    Log::error("AI callAI ({$this->driver}) Error: " . $e->getMessage());
                     return null;
                 }
+            }
+
+            public function generateResponse(string $userMessage, string $chatId, ?string $context = null): ?string
+            {
+                $cachedResponse = $this->service->findSemanticCachedResponse($userMessage);
+                if ($cachedResponse) {
+                    ChatbotLog::create([
+                        'telegram_chat_id' => $chatId,
+                        'pesan_masuk'      => $userMessage,
+                        'balasan_ai'       => $cachedResponse,
+                        'tokens_used'      => 0,
+                    ]);
+                    return $cachedResponse;
+                }
+
+                $systemPrompt = $context
+                    ? $this->service->getRAGSystemPrompt($context)
+                    : $this->service->getSystemPrompt();
+
+                $fullPrompt = $systemPrompt . "\n\nUser: " . $userMessage;
+                $aiResponse = $this->callAI($fullPrompt);
+
+                if ($aiResponse) {
+                    ChatbotLog::create([
+                        'telegram_chat_id' => $chatId,
+                        'pesan_masuk'      => $userMessage,
+                        'balasan_ai'       => $aiResponse,
+                        'tokens_used'      => null,
+                    ]);
+                }
+
+                return $aiResponse;
             }
 
             public function fixCopywriting(string $text, ?string $title = null): ?string
             {
-                try {
-                    $trimmedText = trim(strip_tags($text));
+                $trimmedText = trim(strip_tags($text));
 
-                    if (empty($trimmedText)) {
-                        $prompt = 'Buatlah satu artikel berita atau pengumuman desa yang lengkap, natural, mengalir dengan baik, informatif, dan sangat bagus berdasarkan judul berikut: "' . ($title ?? 'Informasi Desa') . '". Gunakan bahasa Indonesia yang baik, benar, formal namun tetap ramah dibaca oleh warga desa. Format artikel menggunakan tag HTML standar (seperti tag p, strong, em, ul, li, br, dll). Jangan berikan penjelasan atau pengantar tambahan apapun, balas HANYA dengan kode HTML artikel tersebut secara langsung.';
-                    } else {
-                        $prompt = "Perbaiki dan sempurnakan copywriting tulisan artikel berita desa berikut dari segi ejaan (EYD/PUEBI), tata bahasa, kesantunan, kejelasan, dan alur keterbacaan agar formal, menarik, dan rapi untuk dibaca warga desa. Pertahankan tag HTML (seperti p, strong, em, ul, li, br, dll) yang sudah ada di dalam teks asli. Jangan berikan penjelasan, komentar, atau pengantar tambahan apapun, balas HANYA dengan teks artikel yang sudah diperbaiki secara langsung.\n\nTeks Asli:\n" . $text;
-                    }
-
-                    return strip_tags(Ai::driver($this->driver)->chat($prompt)) ?: null;
-                } catch (\Exception $e) {
-                    Log::error("AiProvider ({$this->driver}) fixCopywriting Error: " . $e->getMessage());
-                    return null;
+                if (empty($trimmedText)) {
+                    $prompt = 'Buatlah satu artikel berita atau pengumuman desa yang lengkap, natural, mengalir dengan baik, informatif, dan sangat bagus berdasarkan judul berikut: "' . ($title ?? 'Informasi Desa') . '". Gunakan bahasa Indonesia yang baik, benar, formal namun tetap ramah dibaca oleh warga desa. Format artikel menggunakan tag HTML standar (seperti tag p, strong, em, ul, li, br, dll). Jangan berikan penjelasan atau pengantar tambahan apapun, balas HANYA dengan kode HTML artikel tersebut secara langsung.';
+                } else {
+                    $prompt = "Perbaiki dan sempurnakan copywriting tulisan artikel berita desa berikut dari segi ejaan (EYD/PUEBI), tata bahasa, kesantunan, kejelasan, dan alur keterbacaan agar formal, menarik, dan rapi untuk dibaca warga desa. Pertahankan tag HTML (seperti p, strong, em, ul, li, br, dll) yang sudah ada di dalam teks asli. Jangan berikan penjelasan, komentar, atau pengantar tambahan apapun, balas HANYA dengan teks artikel yang sudah diperbaiki secara langsung.\n\nTeks Asli:\n" . $text;
                 }
+
+                $response = $this->callAI($prompt);
+                return $response ? strip_tags($response) : null;
             }
 
             public function generateSeoMetadata(string $title, string $content): ?array
             {
-                try {
-                    $prompt = "Sebagai pakar SEO, buatkan meta description dan 5-8 kata kunci (keywords) yang relevan untuk artikel berikut.\nJudul: {$title}\nKonten: " . strip_tags($content) . "\n\nBalas HANYA dengan format JSON valid seperti ini tanpa ada teks tambahan atau markdown block:\n{\"meta_description\": \"...\", \"kata_kunci\": \"...\"}";
+                $prompt = "Sebagai pakar SEO, buatkan meta description dan 5-8 kata kunci (keywords) yang relevan untuk artikel berikut.\nJudul: {$title}\nKonten: " . strip_tags($content) . "\n\nBalas HANYA dengan format JSON valid seperti ini tanpa ada teks tambahan atau markdown block:\n{\"meta_description\": \"...\", \"kata_kunci\": \"...\"}";
 
-                    $response = Ai::driver($this->driver)->chat($prompt);
-                    if (!$response) return null;
+                $response = $this->callAI($prompt);
+                if (!$response) return null;
 
-                    $jsonStr = str_replace(['```json', '```'], '', $response);
-                    $data = json_decode(trim($jsonStr), true);
+                $jsonStr = str_replace(['```json', '```'], '', $response);
+                $data = json_decode(trim($jsonStr), true);
 
-                    if (json_last_error() === JSON_ERROR_NONE && isset($data['meta_description'])) {
-                        return $data;
-                    }
-                    return null;
-                } catch (\Exception $e) {
-                    Log::error("AiProvider ({$this->driver}) generateSeoMetadata Error: " . $e->getMessage());
-                    return null;
+                if (json_last_error() === JSON_ERROR_NONE && isset($data['meta_description'])) {
+                    return $data;
                 }
+                return null;
             }
 
             public function checkHealth(): bool
             {
-                try {
-                    $response = Ai::driver($this->driver)->chat('ping');
-                    return !empty($response);
-                } catch (\Exception $e) {
-                    return false;
-                }
+                $response = $this->callAI('ping');
+                return !empty($response);
             }
         };
     }

@@ -39,12 +39,12 @@ class HandleInertiaRequests extends Middleware
         $cleanNamaDesa = preg_replace('/^(desa|desa)\s+/i', '', $rawNamaDesa);
 
         $getFotoUrl = function ($kunci) {
-            $val = \App\Models\PengaturanFrontend::get($kunci);
-            if (!$val) return null;
+            $val = \App\Models\PengaturanFrontend::get($kunci) ?? \App\Models\PengaturanDesa::get($kunci);
+            if (empty($val)) return null;
             if (str_starts_with($val, 'http://') || str_starts_with($val, 'https://')) return $val;
-            return \Illuminate\Support\Facades\Storage::exists('public/' . $val)
-                ? \Illuminate\Support\Facades\Storage::url($val)
-                : null;
+            
+            $disk = \App\Models\PengaturanDesa::get('storage_active_disk', 'public');
+            return \Illuminate\Support\Facades\Storage::disk($disk)->url($val);
         };
 
         return [

@@ -281,3 +281,37 @@
         to { opacity: 1; transform: translateY(0); }
     }
 </style>
+
+<script>
+    // Fix for corrupted Alpine.js persist data causing 'includes' error on sidebar groups
+    document.addEventListener('alpine:initialized', () => {
+        if (window.Alpine && Alpine.store('sidebar')) {
+            let sidebar = Alpine.store('sidebar');
+            if (!sidebar.collapsedGroups || !Array.isArray(sidebar.collapsedGroups)) {
+                sidebar.collapsedGroups = [];
+            }
+            
+            // Override the methods to be defensive just in case
+            const originalGroupIsCollapsed = sidebar.groupIsCollapsed;
+            sidebar.groupIsCollapsed = function(group) {
+                if (!this.collapsedGroups || !Array.isArray(this.collapsedGroups)) {
+                    this.collapsedGroups = [];
+                }
+                return this.collapsedGroups.includes(group);
+            };
+            
+            const originalToggle = sidebar.toggleCollapsedGroup;
+            sidebar.toggleCollapsedGroup = function(group) {
+                if (!this.collapsedGroups || !Array.isArray(this.collapsedGroups)) {
+                    this.collapsedGroups = [];
+                }
+                if (this.groupIsCollapsed(group)) {
+                    this.collapsedGroups = this.collapsedGroups.filter((g) => g !== group);
+                } else {
+                    this.collapsedGroups.push(group);
+                }
+            };
+        }
+    });
+
+</script>

@@ -95,7 +95,9 @@ class PengaturanSistem extends Page implements HasForms
             'nama_kepala_desa' => PengaturanDesa::get('nama_kepala_desa'),
             'nip_kepala_desa' => PengaturanDesa::get('nip_kepala_desa'),
             'visi' => PengaturanDesa::get('visi'),
-            'misi' => PengaturanDesa::get('misi', []),
+            'misi' => collect(PengaturanDesa::get('misi', []))->map(
+                fn ($item) => is_string($item) ? ['misi_item' => $item] : $item
+            )->values()->all(),
 
             'ai_active_provider' => PengaturanDesa::get('ai_active_provider', 'gemini'),
             'ai_gemini_key' => PengaturanDesa::get('ai_gemini_key'),
@@ -202,13 +204,16 @@ class PengaturanSistem extends Page implements HasForms
                                     ->maxLength(500),
                                 Repeater::make('misi')
                                     ->label('Misi Desa')
-                                    ->simple(
+                                    ->schema([
                                         TextInput::make('misi_item')
-                                            ->placeholder('Masukkan poin misi...')
+                                            ->label('Poin Misi')
                                             ->required()
-                                    )
-                                    ->helperText('Klik tombol "+ Tambah" di bawah untuk menambah poin misi desa.')
-                                    ->default([]),
+                                            ->placeholder('Masukkan poin misi...'),
+                                    ])
+                                    ->addActionLabel('Tambah Poin Misi')
+                                    ->helperText('Klik tombol di bawah untuk menambah poin misi desa.')
+                                    ->defaultItems(0)
+                                    ->collapsible(false),
                             ]),
                         Tab::make('Aset Visual Desa')
                             ->icon('heroicon-o-photo')
