@@ -284,9 +284,14 @@ class TelegramService
     public function setWebhook(string $url): bool
     {
         try {
-            $response = Http::timeout(10)->connectTimeout(5)->post("{$this->apiUrl}/setWebhook", [
-                'url' => $url,
-            ]);
+            $payload = ['url' => $url];
+
+            $secret = config('services.telegram.webhook_secret');
+            if ($secret) {
+                $payload['secret_token'] = $secret;
+            }
+
+            $response = Http::timeout(10)->connectTimeout(5)->post("{$this->apiUrl}/setWebhook", $payload);
 
             return $response->successful();
         } catch (ConnectionException $e) {
