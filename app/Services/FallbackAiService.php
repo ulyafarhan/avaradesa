@@ -199,18 +199,18 @@ class FallbackAiService implements AiProviderInterface
                 $trimmedText = trim(strip_tags($text));
 
                 if (empty($trimmedText)) {
-                    $prompt = 'Buatlah satu artikel berita atau pengumuman desa yang lengkap, natural, mengalir dengan baik, informatif, dan sangat bagus berdasarkan judul berikut: "' . ($title ?? 'Informasi Desa') . '". Gunakan bahasa Indonesia yang baik, benar, formal namun tetap ramah dibaca oleh warga desa. Format artikel menggunakan tag HTML standar (seperti tag p, strong, em, ul, li, br, dll). Jangan berikan penjelasan atau pengantar tambahan apapun, balas HANYA dengan kode HTML artikel tersebut secara langsung.';
+                    $prompt = 'Buatlah satu artikel berita desa yang profesional dan informatif berdasarkan judul berikut: "' . ($title ?? 'Informasi Desa') . '". Struktur artikel: (1) Pendahuluan singkat, (2) Isi utama dengan fakta/detail, (3) Penutup/harapan. Gunakan bahasa Indonesia formal, mengalir alami, dan mudah dipahami warga. Paragraf pendek (3-4 kalimat). Output HANYA kode HTML dengan tag <p>, tanpa tag HTML tambahan di luar <p>. Jangan gunakan <h1>, <h2>, <strong>, <em>, atau daftar. Cukup paragraf <p> saja.';
                 } else {
-                    $prompt = "Perbaiki dan sempurnakan copywriting tulisan artikel berita desa berikut dari segi ejaan (EYD/PUEBI), tata bahasa, kesantunan, kejelasan, dan alur keterbacaan agar formal, menarik, dan rapi untuk dibaca warga desa. Pertahankan tag HTML (seperti p, strong, em, ul, li, br, dll) yang sudah ada di dalam teks asli. Jangan berikan penjelasan, komentar, atau pengantar tambahan apapun, balas HANYA dengan teks artikel yang sudah diperbaiki secara langsung.\n\nTeks Asli:\n" . $text;
+                    $prompt = "Perbaiki tulisan artikel berita desa berikut agar: (1) Bahasa Indonesia formal dan enak dibaca, (2) Struktur rapi (pembukaan-isi-penutup), (3) Ejaan sesuai EYD/PUEBI, (4) Alur jelas dan tidak ngawur, (5) Paragraf pendek (3-4 kalimat). Output HANYA kode HTML dengan tag <p>. Hapus tag HTML lain seperti <h1>, <h2>, <strong>, <em>, <ul>, <li>. Hanya gunakan <p> untuk setiap paragraf.\n\nTeks Asli:\n" . $text;
                 }
 
                 $response = $this->callAI($prompt);
-                return $response ? strip_tags($response) : null;
+                return $response ? preg_replace('/<[^p\/][^>]*>/', '', $response) : null;
             }
 
             public function generateSeoMetadata(string $title, string $content): ?array
             {
-                $prompt = "Sebagai pakar SEO, buatkan meta description dan 5-8 kata kunci (keywords) yang relevan untuk artikel berikut.\nJudul: {$title}\nKonten: " . strip_tags($content) . "\n\nBalas HANYA dengan format JSON valid seperti ini tanpa ada teks tambahan atau markdown block:\n{\"meta_description\": \"...\", \"kata_kunci\": \"...\"}";
+                $prompt = "Sebagai pakar SEO, buatkan meta description (maksimal 150 karakter) dan 5-8 kata kunci (keywords) yang relevan untuk artikel berikut.\nJudul: {$title}\nKonten: " . strip_tags($content) . "\n\nBalas HANYA dengan format JSON valid seperti ini tanpa ada teks tambahan atau markdown block:\n{\"meta_description\": \"...\", \"kata_kunci\": \"...\"}\n\nPASTIKAN meta_description TIDAK LEBIH dari 150 karakter.";
 
                 $response = $this->callAI($prompt);
                 if (!$response) return null;
@@ -219,6 +219,7 @@ class FallbackAiService implements AiProviderInterface
                 $data = json_decode(trim($jsonStr), true);
 
                 if (json_last_error() === JSON_ERROR_NONE && isset($data['meta_description'])) {
+                    $data['meta_description'] = mb_substr($data['meta_description'], 0, 150);
                     return $data;
                 }
                 return null;
