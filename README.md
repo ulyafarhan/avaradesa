@@ -911,7 +911,7 @@ npm run lint
 ### Fase 1: Backend API & Core Engine — **Selesai**
 
 -   Database relasional 38 tabel (business + system + referensi)
-- 57 endpoint API + 20 rute web
+- 41 endpoint API + 28 rute web
 - Integrasi multi-AI dual layer (16 SDK + 6 custom class)
 - Fallback chain Gemini → OpenAI dengan provider siap pakai: DeepSeek, Ollama, Bedrock
 - Telegram Bot dengan RAG, semantic cache, dan knowledge base
@@ -956,11 +956,14 @@ npm run lint
 
 ### Fase 6: Pengembangan Lanjutan — **Dalam Pengerjaan**
 
-- Aktivasi penuh DeepSeek, Ollama, dan Bedrock di fallback chain
-- Peningkatan cakupan pengujian (target 300+ test methods)
+- Buku Administrasi Desa digital — implementasi 6+ buku register wajib (Permendagri No. 17/2007)
+- Integrasi SIAK Dukcapil — sinkronisasi data kependudukan dengan database nasional
+- Laporan SDGs Desa otomatis — agregasi data untuk capaian SDGs (Permendesa PDTT No. 16/2025)
+- Arsip surat digital dengan retensi — pengelolaan arsip sesuai JRA
+- Pencatatan sipil terintegrasi — kelahiran/kematian terhubung ke Dukcapil
+- Open data desa — API data terbuka sesuai prinsip Satu Data Indonesia
 - Notifikasi push via Firebase (Capacitor)
 - Dashboard real-time dengan WebSocket
-- Integrasi Siskeudes / sistem desa lainnya
 
 ---
 
