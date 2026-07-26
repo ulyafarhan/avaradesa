@@ -956,12 +956,10 @@ npm run lint
 
 ### Fase 6: Pengembangan Lanjutan — **Dalam Pengerjaan**
 
-- Buku Administrasi Desa digital — implementasi 6+ buku register wajib (Permendagri No. 17/2007)
-- Integrasi SIAK Dukcapil — sinkronisasi data kependudukan dengan database nasional
-- Laporan SDGs Desa otomatis — agregasi data untuk capaian SDGs (Permendesa PDTT No. 16/2025)
-- Arsip surat digital dengan retensi — pengelolaan arsip sesuai JRA
-- Pencatatan sipil terintegrasi — kelahiran/kematian terhubung ke Dukcapil
-- Open data desa — API data terbuka sesuai prinsip Satu Data Indonesia
+- Tanda Tangan Elektronik (TTE) surat desa — hash SHA256 mengikat data surat + TTD + stempel
+- Buku Administrasi Desa digital — generate PDF buku register dari data existing
+- Arsip surat digital — pencarian dan ekspor PDF kumpulan surat selesai
+- Laporan desa mandiri — ekspor profil desa dan statistik kependudukan ke PDF
 - Notifikasi push via Firebase (Capacitor)
 - Dashboard real-time dengan WebSocket
 
