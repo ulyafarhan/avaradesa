@@ -61,6 +61,11 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\MutasiPenduduk::saved($clearStatistikCache);
         \App\Models\MutasiPenduduk::deleted($clearStatistikCache);
 
+        // ponytail: skip koneksi database di environment testing (gak ada MySQL)
+        if ($this->app->environment('testing')) {
+            return;
+        }
+
         $tableName = \Illuminate\Support\Facades\Schema::hasTable('pengaturan_desa') ? 'pengaturan_desa' : null;
 
         if ($tableName) {

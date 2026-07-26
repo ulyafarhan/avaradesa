@@ -72,7 +72,7 @@ memory({ mode: "add", content: "## Session Summary\n- Task: <ringkasan>\n- Files
 - Mark simplifications: `// ponytail: <alasan>`
 
 ## VIBE Init
-- **Init date**: 2026-07-24
+- **Init date**: 2026-07-24 (refreshed: 2026-07-26)
 - **Project**: AvaraDesa (Sistem Informasi Desa Terpadu)
 - **Stack**: Laravel 13, Filament 5, Vue 3 + Inertia, Tailwind v4, MySQL
 - **Mobile**: Capacitor 8 (Android/iOS) + Vue Router
@@ -80,8 +80,7 @@ memory({ mode: "add", content: "## Session Summary\n- Task: <ringkasan>\n- Files
 - **Auth**: Sanctum + Filament + custom guard
 - **AI**: Laravel AI (Gemini/OpenAI/DeepSeek/Ollama)
 - **Notifikasi**: WhatsApp (wa-gateway + Fonnte), Telegram
-- **Commits**: 65
 - **Models**: 28 Eloquent
-- **Controllers**: 11 (6 API, 5 Web)
-- **Tests**: 43 file PHPUnit
-- **Codebase**: Indexed via codebase-memory-mcp
+- **Controllers**: 14 API + 6 Web
+- **Tests**: 43+ file (PHPUnit + Vitest)
+- **Codebase**: 12,707 nodes, 57,653 edges (indexed via codebase-memory-mcp)

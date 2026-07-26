@@ -13,7 +13,7 @@ Untuk memudahkan pemahaman sistem secara cepat dan profesional, dokumentasi diba
 2. **[docs/frontend/frontend.md](frontend/frontend.md)**
    * Berisi spesifikasi frontend (Vue 3, Inertia.js, Vite 8, Tailwind CSS v4), detail Single File Component (SFC), form dinamis, penanganan avatar, komponen notifikasi (TelegramCard, WAGatewayCard), optimasi SEO & GEO menggunakan JSON-LD, dan pengujian unit (Vitest).
 3. **[docs/architecture/plan-app-capacitor.md](architecture/plan-app-capacitor.md)**
-   * Berisi blueprint spesifikasi teknis untuk pengembangan aplikasi Warga dan Admin (Android, iOS, Windows, Desktop) menggunakan Capacitor, Electron, dan Vue 3.
+   * Berisi blueprint spesifikasi teknis untuk pengembangan aplikasi Warga dan Admin (Android, Windows, Desktop) menggunakan Capacitor, Electron, dan Vue 3.
 4. **[docs/database/database.md](database/database.md)** & **[docs/database/erd.md](database/erd.md)**
    * Berisi skema database MySQL/MariaDB (27+ tabel: 16 relasional + 2 konfigurasi + 2 AI conversations), diagram kardinalitas relasi, pemetaan lengkap ERD rinci, penempatan indexing kueri, dan sistem logging audit data (audit trail).
 5. **[docs/api/api.md](api/api.md)**
@@ -36,7 +36,7 @@ Untuk memudahkan pemahaman sistem secara cepat dan profesional, dokumentasi diba
 | **Notifikasi Dual-Channel** | Telegram Bot + WhatsApp (wa-gateway/Fonnte) dengan template admin-editable |
 | **Dashboard Admin** | Filament PHP v5.6, statistik real-time, traffic monitoring, server performance |
 | **Offline Sync** | Push/pull data offline dengan conflict resolution |
-| **Mobile App** | Capacitor (Android/iOS/Windows) dengan native biometric |
+| **Mobile App** | Capacitor (Android) dengan native biometric |
 
 ---
 

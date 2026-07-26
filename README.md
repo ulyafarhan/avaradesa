@@ -11,14 +11,14 @@ Sistem Informasi Desa Terpadu berbasis Laravel + Filament + Vue 3. Multi-platfor
 
 | Role | Username | Password |
 |:-----|:---------|:---------|
-| Kepala Desa | `kepala desa` | `kepaladesa789` |
-| Sekretaris Desa | `sekdes` | `sekdes456` |
-| Operator | `operator` | `operator123` |
+| Kepala Desa | `admin` | `password` |
+| Operator | `operator` | `password` |
 
 **Akun Warga Demo:**
 - NIK: `1118060512900001` — No. KK: `1118060001000001`
-- Nama: Muhammad Rizal — Password: `password`
-- Login di [https://avaradesa.my.id/login](https://avaradesa.my.id/login)
+- Nama: Muhammad Rizal — Login via NIK + No KK (tanpa password)
+- Istri: NIK `1118064508920002` — Nurhaliza
+- Anak: NIK `1118062010150003` — Muhammad Fadil
 
 > **Peringatan:** Ubah password segera setelah login pertama. Password ini hanya untuk pengembangan/testing.
 
@@ -48,7 +48,7 @@ Sistem Informasi Desa Terpadu berbasis Laravel + Filament + Vue 3. Multi-platfor
 
 ### 1.1 Tentang AvaraDesa
 
-AvaraDesa adalah platform administrasi desa berbasis web, mobile (Android/iOS), dan desktop (Windows/Mac/Linux). Warga bisa mengurus surat, cek data kependudukan, dan lacak status pengajuan secara mandiri — tanpa harus bolak-balik ke kantor desa. Admin (kepala desa, sekdes, operator) kelola semuanya dari panel Filament.
+AvaraDesa adalah platform administrasi desa berbasis web, mobile (Android), dan desktop (Windows/Mac/Linux). Warga bisa mengurus surat, cek data kependudukan, dan lacak status pengajuan secara mandiri — tanpa harus bolak-balik ke kantor desa. Admin (kepala desa, sekdes, operator) kelola semuanya dari panel Filament.
 
 ### 1.2 Visi dan Misi
 
@@ -114,7 +114,7 @@ AvaraDesa adalah platform administrasi desa berbasis web, mobile (Android/iOS), 
 | Pinia | ^4.0.2 | State management reaktif |
 | Vue Router | ^5.2.0 | Routing deklaratif |
 | Tailwind CSS | ^4.3.3 | Utility-first CSS framework |
-| Capacitor | ^8.4.2 | Native runtime untuk Android & iOS |
+| Capacitor | ^8.4.2 | Native runtime untuk Android |
 | Electron | ^43.1.1 | Desktop runtime untuk Windows, Mac & Linux |
 | TypeScript | ~6.0.2 | Type safety |
 | Vite | ^8.1.1 | Build tool |
@@ -320,7 +320,7 @@ avaradesa/
 │   ├── electron/                  # Main process Electron
 │   ├── electron-builder.yml       # Build config Electron
 │   ├── android/                   # Native Android project
-│   ├── ios/                       # Native iOS project
+│   ├── ios/                       # Native iOS scaffold (Capacitor)
 │   └── package.json               # Dependensi Vue 3, Pinia, Capacitor, Electron, TypeScript
 ├── config/                        # Konfigurasi Laravel (sanctum, ai, services, activitylog, dll)
 ├── database/
@@ -435,7 +435,7 @@ erDiagram
 
 ## 7. Spesifikasi API
 
-Seluruh endpoint API berada di bawah prefix `/api/v1/`. **Total: 57 Endpoint API + 20 Rute Web**.
+Seluruh endpoint API berada di bawah prefix `/api/v1/`. **Total: 41 Endpoint API + 26 Rute Web**.
 
 ### 7.1 Autentikasi
 
@@ -540,7 +540,7 @@ Seluruh endpoint API berada di bawah prefix `/api/v1/`. **Total: 57 Endpoint API
 | POST | `/v1/telegram/webhook` | Menangani pesan masuk dari Telegram | IP Restrict (throttle:60,1) |
 | POST | `/v1/whatsapp/webhook` | Menangani pesan masuk dari WhatsApp + FAQ auto-reply | X-API-Key (throttle:60,1) |
 
-### 7.10 Rute Web (20 Rute)
+### 7.10 Rute Web (28 Rute)
 
 | Metode | Endpoint | Deskripsi | Otorisasi |
 |:-------|:---------|:----------|:----------|
@@ -703,7 +703,7 @@ Platform dirancang dengan standar keamanan berlapis:
 
 ## 10. Aplikasi Mobile & Desktop (Capacitor + Electron)
 
-Aplikasi native untuk Android, iOS, Windows, Mac, dan Linux dibangun dari satu codebase Vue 3 + TypeScript di folder `apps/`:
+Aplikasi untuk Android, Windows, Mac, dan Linux dibangun dari satu codebase Vue 3 + TypeScript di folder `apps/`:
 
 ### 10.1 Fitur Mobile/Desktop
 
@@ -722,7 +722,7 @@ Aplikasi native untuk Android, iOS, Windows, Mac, dan Linux dibangun dari satu c
 - **State Management**: Pinia
 - **Routing**: Vue Router (independen, bukan Inertia)
 - **Offline Data**: IndexedDB (localForage) / SQLite via Capacitor Plugin
-- **Native**: Capacitor 8 (Android/iOS) + Electron 43 (Windows/Mac/Linux)
+- **Platform**: Android (Capacitor 8) + Desktop (Electron 43)
 - **API**: Mengkonsumsi langsung `/api/v1/` yang sama dengan portal web, meminimalisir duplikasi kode
 
 ### 10.3 Build & Run
@@ -737,10 +737,6 @@ npm run dev
 # Android (via Capacitor)
 npx cap sync android
 npx cap open android
-
-# iOS (via Capacitor)
-npx cap sync ios
-npx cap open ios
 
 # Windows / Mac / Linux (via Electron)
 npm run electron:dev

@@ -1,6 +1,6 @@
 # AvaraDesa Mobile & Desktop
 
-Aplikasi mobile (Android/iOS via Capacitor) dan desktop (via Electron) untuk AvaraDesa — Sistem Informasi Desa Terpadu.
+Aplikasi mobile (Android via Capacitor) dan desktop (via Electron) untuk AvaraDesa — Sistem Informasi Desa Terpadu.
 
 ## Tech Stack
 
@@ -12,7 +12,7 @@ Aplikasi mobile (Android/iOS via Capacitor) dan desktop (via Electron) untuk Ava
 | State | Pinia (`^4.0.2`) |
 | Router | Vue Router (`^5.2.0`) — hash history |
 | Styling | Tailwind CSS v4 (`^4.3.3`) + `@tailwindcss/vite` |
-| Mobile | Capacitor 8 (`@capacitor/core ^8.4.2`) — Android & iOS |
+| Mobile | Capacitor 8 (`@capacitor/core ^8.4.2`) — Android |
 | Desktop | Electron (`^43.1.1`) + electron-builder |
 
 ## Arsitektur
