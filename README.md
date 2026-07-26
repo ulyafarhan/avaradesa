@@ -11,8 +11,10 @@ Sistem Informasi Desa Terpadu berbasis Laravel + Filament + Vue 3. Multi-platfor
 
 | Role | Username | Password |
 |:-----|:---------|:---------|
-| Kepala Desa | `admin` | `password` |
-| Operator | `operator` | `password` |
+| Kepala Desa | `kepala desa` | `kepaladesa789` |
+| Kepala Desa (alt) | `admin` | `password` |
+| Sekretaris Desa | `sekdes` | `sekdes456` |
+| Operator | `operator` | `operator123` |
 
 **Akun Warga Demo:**
 - NIK: `1118060512900001` — No. KK: `1118060001000001`
